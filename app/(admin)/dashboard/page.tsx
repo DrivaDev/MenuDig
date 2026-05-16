@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, Tag, UtensilsCrossed } from 'lucide-react'
+import { Loader2, Tag, UtensilsCrossed, QrCode, Palette } from 'lucide-react'
 import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
 import OnboardingSlug from '@/components/dashboard/OnboardingSlug'
@@ -97,6 +97,40 @@ export default async function DashboardPage() {
               </p>
               <p className="text-xs font-light text-brand-texto">
                 Sumá un nuevo plato al menú
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href="/dashboard/qr"
+            className="flex items-center gap-3 px-4 py-4 rounded-lg border border-brand-acento hover:bg-brand-fondo transition-colors duration-150 group"
+          >
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-acento shrink-0">
+              <QrCode size={18} className="text-brand-titulares" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-brand-titulares group-hover:underline">
+                Editar QR
+              </p>
+              <p className="text-xs font-light text-brand-texto">
+                Personalizá colores y estilo del código
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href="/dashboard/settings"
+            className="flex items-center gap-3 px-4 py-4 rounded-lg border border-brand-acento hover:bg-brand-fondo transition-colors duration-150 group"
+          >
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-acento shrink-0">
+              <Palette size={18} className="text-brand-titulares" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-brand-titulares group-hover:underline">
+                Personalizar menú
+              </p>
+              <p className="text-xs font-light text-brand-texto">
+                Colores, logo y layout de tu menú público
               </p>
             </div>
           </Link>
