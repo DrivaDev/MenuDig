@@ -207,7 +207,7 @@ export default function QRCustomizer({
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-sm">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
       {/* ── Preview card ─────────────────────────────────────────────────── */}
       <div className="bg-white rounded-lg shadow-sm border border-brand-acento p-6 flex flex-col items-center gap-4">

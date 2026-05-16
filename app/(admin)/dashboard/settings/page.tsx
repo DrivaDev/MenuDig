@@ -30,7 +30,7 @@ export default async function SettingsPage() {
   if (!restaurant) redirect('/dashboard')
 
   return (
-    <div className="flex flex-col gap-8 max-w-xl">
+    <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-2xl font-bold text-brand-titulares mb-1">Configuración</h1>
         <p className="text-sm font-normal text-brand-texto">
@@ -38,42 +38,46 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      {/* Perfil del restaurante */}
-      <div className="bg-white rounded-lg shadow-sm border border-brand-acento p-6">
-        <h2 className="text-base font-bold text-brand-titulares mb-5">Perfil del restaurante</h2>
-        <RestaurantProfileForm
-          initialName={restaurant.name}
-          initialLogoUrl={restaurant.logoUrl ?? ''}
-          initialLogoPublicId={restaurant.logoPublicId ?? ''}
-          initialDescription={restaurant.description ?? ''}
-        />
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* Perfil del restaurante */}
+        <div className="bg-white rounded-lg shadow-sm border border-brand-acento p-6">
+          <h2 className="text-base font-bold text-brand-titulares mb-5">Perfil del restaurante</h2>
+          <RestaurantProfileForm
+            initialName={restaurant.name}
+            initialLogoUrl={restaurant.logoUrl ?? ''}
+            initialLogoPublicId={restaurant.logoPublicId ?? ''}
+            initialDescription={restaurant.description ?? ''}
+          />
+        </div>
 
-      {/* Color del menú público */}
-      <div className="bg-white rounded-lg shadow-sm border border-brand-acento p-6">
-        <h2 className="text-base font-bold text-brand-titulares mb-1">Apariencia del menú</h2>
-        <p className="text-sm font-normal text-brand-texto mb-5">
-          Personalizá los colores de tu menú público: acento, fondo, títulos y texto.
-        </p>
-        <MenuColorForm
-          initialColor={restaurant.menuColor ?? '#EA580C'}
-          initialBgColor={restaurant.menuBgColor ?? '#FFF7ED'}
-          initialTitleColor={restaurant.menuTitleColor ?? '#9A3412'}
-          initialTextColor={restaurant.menuTextColor ?? '#1C1917'}
-        />
-      </div>
+        <div className="flex flex-col gap-8">
+          {/* Apariencia del menú */}
+          <div className="bg-white rounded-lg shadow-sm border border-brand-acento p-6">
+            <h2 className="text-base font-bold text-brand-titulares mb-1">Apariencia del menú</h2>
+            <p className="text-sm font-normal text-brand-texto mb-5">
+              Personalizá los colores de tu menú público: acento, fondo, títulos y texto.
+            </p>
+            <MenuColorForm
+              initialColor={restaurant.menuColor ?? '#EA580C'}
+              initialBgColor={restaurant.menuBgColor ?? '#FFF7ED'}
+              initialTitleColor={restaurant.menuTitleColor ?? '#9A3412'}
+              initialTextColor={restaurant.menuTextColor ?? '#1C1917'}
+            />
+          </div>
 
-      {/* Layout del menú público */}
-      <div className="bg-white rounded-lg shadow-sm border border-brand-acento p-6">
-        <h2 className="text-base font-bold text-brand-titulares mb-1">Layout del menú</h2>
-        <p className="text-sm font-normal text-brand-texto mb-5">
-          Posición y tamaño del logo, y visibilidad de la descripción.
-        </p>
-        <MenuLayoutForm
-          initialLogoPosition={restaurant.menuLogoPosition ?? 'left'}
-          initialLogoSize={restaurant.menuLogoSize ?? 'md'}
-          initialShowDescription={restaurant.menuShowDescription ?? true}
-        />
+          {/* Layout del menú */}
+          <div className="bg-white rounded-lg shadow-sm border border-brand-acento p-6">
+            <h2 className="text-base font-bold text-brand-titulares mb-1">Layout del menú</h2>
+            <p className="text-sm font-normal text-brand-texto mb-5">
+              Posición y tamaño del logo, y visibilidad de la descripción.
+            </p>
+            <MenuLayoutForm
+              initialLogoPosition={restaurant.menuLogoPosition ?? 'left'}
+              initialLogoSize={restaurant.menuLogoSize ?? 'md'}
+              initialShowDescription={restaurant.menuShowDescription ?? true}
+            />
+          </div>
+        </div>
       </div>
     </div>
   )
