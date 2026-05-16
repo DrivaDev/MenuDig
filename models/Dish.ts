@@ -11,6 +11,7 @@ const DishSchema = new Schema(
     imageUrl:      { type: String, default: '' },
     imagePublicId: { type: String, default: '' },
     allergens:     { type: [String], default: [] },
+    order:         { type: Number, default: 0 },
   },
   { timestamps: true }
 )

@@ -60,6 +60,12 @@ export async function createDish(prevState: any, formData: FormData) {
   const category = await Category.findOne({ _id: categoryId, restaurantId: restaurant._id }).lean()
   if (!category) return { success: false, error: 'Categoría no válida.' }
 
+  // Assign order = max order in this category + 1
+  const maxOrderDoc = await Dish
+    .findOne({ restaurantId: restaurant._id, categoryId })
+    .sort({ order: -1 })
+    .lean<{ order: number }>()
+
   await Dish.create({
     restaurantId: restaurant._id,
     categoryId,
@@ -70,6 +76,7 @@ export async function createDish(prevState: any, formData: FormData) {
     imagePublicId,
     allergens,
     available,
+    order: (maxOrderDoc?.order ?? -1) + 1,
   })
 
   revalidatePath('/menu/' + restaurant.slug)
@@ -144,6 +151,40 @@ export async function deleteDish(prevState: any, formData: FormData) {
   }
 
   await Dish.deleteOne({ _id: dishId, restaurantId: restaurant._id })
+  revalidatePath('/menu/' + restaurant.slug)
+  return { success: true }
+}
+
+// ─── reorderDishes (bulk — DnD) ───────────────────────────────────────────────
+export async function reorderDishes(prevState: any, formData: FormData) {
+  const { userId } = await auth()
+  if (!userId) return { success: false, error: 'No autorizado.' }
+
+  const raw = formData.get('orderedIds')?.toString()
+  if (!raw) return { success: false, error: 'Datos inválidos.' }
+
+  let orderedIds: string[]
+  try {
+    orderedIds = JSON.parse(raw)
+    if (!Array.isArray(orderedIds)) throw new Error()
+  } catch {
+    return { success: false, error: 'Datos inválidos.' }
+  }
+
+  await dbConnect()
+  const restaurant = await Restaurant.findOne({ clerkId: userId }).lean<{ _id: string; slug: string }>()
+  if (!restaurant) return { success: false, error: 'Restaurante no encontrado.' }
+
+  // Ownership check
+  const owned = await Dish.countDocuments({ _id: { $in: orderedIds }, restaurantId: restaurant._id })
+  if (owned !== orderedIds.length) return { success: false, error: 'Datos inválidos.' }
+
+  await Promise.all(
+    orderedIds.map((id, index) =>
+      Dish.updateOne({ _id: id, restaurantId: restaurant._id }, { $set: { order: index } })
+    )
+  )
+
   revalidatePath('/menu/' + restaurant.slug)
   return { success: true }
 }

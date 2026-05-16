@@ -19,7 +19,7 @@ export default async function DishesPage() {
 
   const [categories, dishes] = await Promise.all([
     Category.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean(),
-    Dish.find({ restaurantId: restaurant._id }).sort({ createdAt: -1 }).lean(),
+    Dish.find({ restaurantId: restaurant._id }).sort({ order: 1, createdAt: 1 }).lean(),
   ])
 
   return (

@@ -91,6 +91,40 @@ export async function deleteCategory(prevState: any, formData: FormData) {
   return { success: true }
 }
 
+// ─── reorderCategories (bulk — DnD) ──────────────────────────────────────────
+export async function reorderCategories(prevState: any, formData: FormData) {
+  const { userId } = await auth()
+  if (!userId) return { success: false, error: 'No autorizado.' }
+
+  const raw = formData.get('orderedIds')?.toString()
+  if (!raw) return { success: false, error: 'Datos inválidos.' }
+
+  let orderedIds: string[]
+  try {
+    orderedIds = JSON.parse(raw)
+    if (!Array.isArray(orderedIds)) throw new Error()
+  } catch {
+    return { success: false, error: 'Datos inválidos.' }
+  }
+
+  await dbConnect()
+  const restaurant = await Restaurant.findOne({ clerkId: userId }).lean<{ _id: string; slug: string }>()
+  if (!restaurant) return { success: false, error: 'Restaurante no encontrado.' }
+
+  // Ownership check — all IDs must belong to this restaurant
+  const owned = await Category.countDocuments({ _id: { $in: orderedIds }, restaurantId: restaurant._id })
+  if (owned !== orderedIds.length) return { success: false, error: 'Datos inválidos.' }
+
+  await Promise.all(
+    orderedIds.map((id, index) =>
+      Category.updateOne({ _id: id, restaurantId: restaurant._id }, { $set: { order: index } })
+    )
+  )
+
+  revalidatePath('/menu/' + restaurant.slug)
+  return { success: true }
+}
+
 // ─── reorderCategory ──────────────────────────────────────────────────────────
 export async function reorderCategory(prevState: any, formData: FormData) {
   const { userId } = await auth()
