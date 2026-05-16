@@ -17,10 +17,9 @@ interface Props {
 }
 
 export function DishRow({ dish }: Props) {
-  const priceFormatted = (dish.price / 100).toLocaleString('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-  })
+  const priceFormatted = dish.price > 0
+    ? (dish.price / 100).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })
+    : null
 
   return (
     <article className="flex items-start gap-4 px-4 py-4 border-b border-gray-100 last:border-b-0">
@@ -47,7 +46,9 @@ export function DishRow({ dish }: Props) {
             {dish.description}
           </p>
         )}
-        <p className="text-base font-bold text-brand-titulares mt-1">{priceFormatted}</p>
+        {priceFormatted && (
+          <p className="text-base font-bold text-brand-titulares mt-1">{priceFormatted}</p>
+        )}
         {dish.allergens.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap mt-2">
             {dish.allergens.map(key => (

@@ -119,7 +119,7 @@ function SortableDishRow({
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-brand-texto truncate">{dish.name}</p>
         <p className="text-xs font-mono text-brand-texto/60">
-          ${(dish.price / 100).toLocaleString('es-AR')}
+          {dish.price > 0 ? `$${(dish.price / 100).toLocaleString('es-AR')}` : '—'}
         </p>
       </div>
 
