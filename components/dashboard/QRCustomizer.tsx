@@ -166,9 +166,8 @@ export default function QRCustomizer({
       backgroundOptions:    { color: bgColor },
       cornersSquareOptions: { type: cornerStyle },
       cornersDotOptions:    { type: cornerStyle === 'dot' ? 'dot' : 'square' },
-      ...(logoEnabled && logoUrl
-        ? { image: logoUrl, imageOptions: { crossOrigin: 'anonymous', margin: 8 } }
-        : {}),
+      image: logoEnabled && logoUrl ? logoUrl : '',
+      imageOptions: { crossOrigin: 'anonymous', margin: 8 },
       qrOptions: { errorCorrectionLevel: logoEnabled && logoUrl ? 'H' : 'M' },
     }
 
