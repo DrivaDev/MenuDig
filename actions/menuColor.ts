@@ -37,3 +37,33 @@ export async function updateMenuTheme(prevState: any, formData: FormData) {
 
   return { success: true, error: undefined }
 }
+
+// ── updateMenuLayout ──────────────────────────────────────────────────────────
+
+export async function updateMenuLayout(prevState: any, formData: FormData) {
+  const { userId } = await auth()
+  if (!userId) return { success: false, error: 'No autorizado.' }
+
+  const menuLogoPosition    = formData.get('menuLogoPosition')?.toString().trim()
+  const menuLogoSize        = formData.get('menuLogoSize')?.toString().trim()
+  const menuShowDescription = formData.get('menuShowDescription') === 'true'
+
+  if (!['left', 'center'].includes(menuLogoPosition ?? ''))
+    return { success: false, error: 'Posición de logo inválida.' }
+  if (!['sm', 'md', 'lg'].includes(menuLogoSize ?? ''))
+    return { success: false, error: 'Tamaño de logo inválido.' }
+
+  await dbConnect()
+  const restaurant = await Restaurant.findOne({ clerkId: userId })
+  if (!restaurant) return { success: false, error: 'Restaurante no encontrado.' }
+
+  await Restaurant.updateOne(
+    { clerkId: userId },
+    { $set: { menuLogoPosition, menuLogoSize, menuShowDescription } },
+  )
+
+  revalidatePath('/menu/' + restaurant.slug)
+  revalidatePath('/dashboard/settings')
+
+  return { success: true, error: undefined }
+}

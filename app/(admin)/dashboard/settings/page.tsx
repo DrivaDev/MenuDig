@@ -4,6 +4,7 @@ import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
 import RestaurantProfileForm from '@/components/dashboard/RestaurantProfileForm'
 import MenuColorForm from '@/components/dashboard/MenuColorForm'
+import MenuLayoutForm from '@/components/dashboard/MenuLayoutForm'
 
 export default async function SettingsPage() {
   const { userId } = await auth()
@@ -21,6 +22,9 @@ export default async function SettingsPage() {
     menuBgColor: string
     menuTitleColor: string
     menuTextColor: string
+    menuLogoPosition: 'left' | 'center'
+    menuLogoSize: 'sm' | 'md' | 'lg'
+    menuShowDescription: boolean
   }>()
 
   if (!restaurant) redirect('/dashboard')
@@ -56,6 +60,19 @@ export default async function SettingsPage() {
           initialBgColor={restaurant.menuBgColor ?? '#FFF7ED'}
           initialTitleColor={restaurant.menuTitleColor ?? '#9A3412'}
           initialTextColor={restaurant.menuTextColor ?? '#1C1917'}
+        />
+      </div>
+
+      {/* Layout del menú público */}
+      <div className="bg-white rounded-lg shadow-sm border border-brand-acento p-6">
+        <h2 className="text-base font-bold text-brand-titulares mb-1">Layout del menú</h2>
+        <p className="text-sm font-normal text-brand-texto mb-5">
+          Posición y tamaño del logo, y visibilidad de la descripción.
+        </p>
+        <MenuLayoutForm
+          initialLogoPosition={restaurant.menuLogoPosition ?? 'left'}
+          initialLogoSize={restaurant.menuLogoSize ?? 'md'}
+          initialShowDescription={restaurant.menuShowDescription ?? true}
         />
       </div>
     </div>

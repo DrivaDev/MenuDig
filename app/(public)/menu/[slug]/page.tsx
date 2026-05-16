@@ -27,6 +27,9 @@ interface RestaurantData {
   menuBgColor: string
   menuTitleColor: string
   menuTextColor: string
+  menuLogoPosition: 'left' | 'center'
+  menuLogoSize: 'sm' | 'md' | 'lg'
+  menuShowDescription: boolean
 }
 
 interface CategoryData {
@@ -103,7 +106,7 @@ export default async function MenuPage({
 
   const [categories, dishes] = await Promise.all([
     CategoryModel.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean<CategoryData[]>(),
-    DishModel.find({ restaurantId: restaurant._id, available: true }).lean<DishData[]>(),
+    DishModel.find({ restaurantId: restaurant._id, available: true }).sort({ order: 1, createdAt: 1 }).lean<DishData[]>(),
   ])
 
   // Group dishes by categoryId — server-side, no client round-trip (per D-16)
@@ -125,6 +128,15 @@ export default async function MenuPage({
   const menuTitleColor = serializedRestaurant.menuTitleColor || '#9A3412'
   const menuTextColor  = serializedRestaurant.menuTextColor  || '#1C1917'
   const themeCSS = `.menu-theme{--color-brand-principal:${menuColor};--color-brand-fondo:${menuBgColor};--color-brand-titulares:${menuTitleColor};--color-brand-texto:${menuTextColor};}`
+
+  // Layout settings
+  const logoPosition    = serializedRestaurant.menuLogoPosition    ?? 'left'
+  const logoSize        = serializedRestaurant.menuLogoSize        ?? 'md'
+  const showDescription = serializedRestaurant.menuShowDescription ?? true
+
+  const logoSizeClass: Record<string, string> = { sm: 'w-14 h-14', md: 'w-20 h-20', lg: 'w-28 h-28' }
+  const logoSizePx:    Record<string, number> = { sm: 56, md: 80, lg: 112 }
+  const headerAlign = logoPosition === 'center' ? 'items-center text-center' : 'items-start'
 
   // Filter out categories with no available dishes
   const populatedCategories = serializedCategories.filter(
@@ -173,21 +185,21 @@ export default async function MenuPage({
       <div className="sm:max-w-lg md:max-w-2xl sm:mx-auto">
 
         {/* Restaurant header */}
-        <header className="bg-brand-fondo px-4 py-8 sm:px-8 sm:py-10">
+        <header className={`bg-brand-fondo px-4 py-8 sm:px-8 sm:py-10 flex flex-col gap-3 ${headerAlign}`}>
           {serializedRestaurant.logoUrl && (
             <Image
               src={serializedRestaurant.logoUrl}
               alt={`Logo de ${serializedRestaurant.name}`}
-              width={80}
-              height={80}
-              className="w-20 h-20 rounded-full object-cover border border-brand-acento"
+              width={logoSizePx[logoSize]}
+              height={logoSizePx[logoSize]}
+              className={`${logoSizeClass[logoSize]} rounded-full object-cover border border-brand-acento`}
             />
           )}
-          <h1 className="text-2xl font-bold text-brand-titulares leading-tight mt-4">
+          <h1 className="text-2xl font-bold text-brand-titulares leading-tight">
             {serializedRestaurant.name}
           </h1>
-          {serializedRestaurant.description && (
-            <p className="text-sm font-normal text-brand-texto leading-normal mt-2 max-w-prose">
+          {showDescription && serializedRestaurant.description && (
+            <p className="text-sm font-normal text-brand-texto leading-normal max-w-prose">
               {serializedRestaurant.description}
             </p>
           )}

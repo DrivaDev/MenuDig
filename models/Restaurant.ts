@@ -27,6 +27,11 @@ const RestaurantSchema = new Schema(
     menuBgColor:    { type: String, default: '#FFF7ED' }, // page background
     menuTitleColor: { type: String, default: '#9A3412' }, // headings & prices
     menuTextColor:  { type: String, default: '#1C1917' }, // body text
+
+    // ── Layout ──────────────────────────────────────────────────────────────
+    menuLogoPosition:    { type: String, enum: ['left', 'center'], default: 'left' },
+    menuLogoSize:        { type: String, enum: ['sm', 'md', 'lg'], default: 'md' },
+    menuShowDescription: { type: Boolean, default: true },
   },
   { timestamps: true }
 )
