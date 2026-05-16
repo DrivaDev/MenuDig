@@ -188,6 +188,18 @@ export default function DishesClient({ dishes: initialDishes, categories }: Prop
     return map
   })
 
+  // Re-sync when server sends fresh initialDishes after router.refresh()
+  useEffect(() => {
+    const map: Record<string, Dish[]> = {}
+    for (const cat of categories) map[cat._id] = []
+    for (const dish of initialDishes) {
+      const key = dish.categoryId ?? '__none__'
+      if (!map[key]) map[key] = []
+      map[key].push(dish)
+    }
+    setDishesByCategory(map)
+  }, [initialDishes]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const [modalOpen, setModalOpen]             = useState(false)
   const [editTarget, setEditTarget]           = useState<Dish | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
