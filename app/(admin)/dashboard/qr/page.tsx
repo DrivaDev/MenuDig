@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
-import QRCard from '@/components/dashboard/QRCard'
+import QRCustomizer from '@/components/dashboard/QRCustomizer'
 
 export default async function QRPage() {
   const { userId } = await auth()
@@ -14,14 +14,19 @@ export default async function QRPage() {
     name: string
     slug: string
     slugConfirmed: boolean
+    logoUrl: string
+    qrFgColor: string
+    qrBgColor: string
+    qrDotStyle: 'square' | 'dots' | 'rounded' | 'classy' | 'classy-rounded' | 'extra-rounded'
+    qrCornerStyle: 'square' | 'dot' | 'extra-rounded'
+    qrLogoEnabled: boolean
   }>()
 
   if (!restaurant || !restaurant.slugConfirmed) {
     redirect('/dashboard')
   }
 
-  // QR is generated client-side in QRCard — no server-side qrcode import needed
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://menudig.com.ar'
+  const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? 'https://menudig.com.ar'
   const menuUrl = `${appUrl}/menu/${restaurant.slug}`
 
   return (
@@ -29,13 +34,20 @@ export default async function QRPage() {
       <div>
         <h1 className="text-2xl font-bold text-brand-titulares mb-1">Mi QR</h1>
         <p className="text-sm font-normal text-brand-texto">
-          Descargá tu código QR o compartí el link de tu menú.
+          Personalizá y descargá tu código QR.
         </p>
       </div>
 
-      <div className="max-w-sm">
-        <QRCard menuUrl={menuUrl} slug={restaurant.slug} />
-      </div>
+      <QRCustomizer
+        slug={restaurant.slug}
+        menuUrl={menuUrl}
+        logoUrl={restaurant.logoUrl || undefined}
+        initialFgColor={restaurant.qrFgColor       ?? '#1C1917'}
+        initialBgColor={restaurant.qrBgColor       ?? '#FFFFFF'}
+        initialDotStyle={restaurant.qrDotStyle     ?? 'square'}
+        initialCornerStyle={restaurant.qrCornerStyle ?? 'square'}
+        initialLogoEnabled={restaurant.qrLogoEnabled ?? false}
+      />
     </div>
   )
 }

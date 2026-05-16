@@ -32,6 +32,13 @@ const RestaurantSchema = new Schema(
     menuLogoPosition:    { type: String, enum: ['left', 'center'], default: 'left' },
     menuLogoSize:        { type: String, enum: ['sm', 'md', 'lg'], default: 'md' },
     menuShowDescription: { type: Boolean, default: true },
+
+    // ── QR customization ────────────────────────────────────────────────────
+    qrFgColor:     { type: String, default: '#1C1917' },
+    qrBgColor:     { type: String, default: '#FFFFFF' },
+    qrDotStyle:    { type: String, enum: ['square', 'dots', 'rounded', 'classy', 'classy-rounded', 'extra-rounded'], default: 'square' },
+    qrCornerStyle: { type: String, enum: ['square', 'dot', 'extra-rounded'], default: 'square' },
+    qrLogoEnabled: { type: Boolean, default: false },
   },
   { timestamps: true }
 )
