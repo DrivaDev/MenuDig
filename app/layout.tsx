@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: '/logo.svg',
-    apple: '/logo.svg',
+    // apple-touch-icon served by app/apple-icon.tsx (180×180 PNG via ImageResponse)
   },
 }
 
