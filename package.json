@@ -27,6 +27,15 @@
     "svix": "^1.92.2",
     "zod": "^4.4.3"
   },
+  "browserslist": [
+    "chrome >= 93",
+    "firefox >= 92",
+    "safari >= 15.4",
+    "ios_saf >= 15.4",
+    "edge >= 93",
+    "samsung >= 17",
+    "not dead"
+  ],
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

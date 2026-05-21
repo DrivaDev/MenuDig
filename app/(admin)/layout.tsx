@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
+import { ClerkProvider } from '@clerk/nextjs'
 import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
 import DashboardShell from '@/components/dashboard/DashboardShell'
@@ -56,14 +57,16 @@ export default async function AdminLayout({
   const subscriptionExpired = restaurant ? !hasActiveAccess(restaurant) : false
 
   return (
-    <DashboardShell
-      restaurantName={restaurant?.name}
-      subscriptionStatus={restaurant?.subscriptionStatus ?? 'trial'}
-      trialEndsAt={trialEndsAt}
-      subscriptionPeriodEnd={subscriptionPeriodEnd}
-      subscriptionExpired={subscriptionExpired}
-    >
-      {children}
-    </DashboardShell>
+    <ClerkProvider afterSignOutUrl="/sign-in">
+      <DashboardShell
+        restaurantName={restaurant?.name}
+        subscriptionStatus={restaurant?.subscriptionStatus ?? 'trial'}
+        trialEndsAt={trialEndsAt}
+        subscriptionPeriodEnd={subscriptionPeriodEnd}
+        subscriptionExpired={subscriptionExpired}
+      >
+        {children}
+      </DashboardShell>
+    </ClerkProvider>
   )
 }

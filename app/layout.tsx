@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Fira_Sans } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 
 const firaSans = Fira_Sans({
@@ -43,9 +42,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={firaSans.variable}>
       <body className="bg-brand-fondo font-sans">
-        <ClerkProvider afterSignOutUrl="/sign-in">
-          {children}
-        </ClerkProvider>
+        {children}
       </body>
     </html>
   )
