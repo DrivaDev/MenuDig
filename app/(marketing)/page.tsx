@@ -551,6 +551,20 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'MenuDig',
+            url: 'https://menudig.com.ar',
+            logo: 'https://menudig.com.ar/logo.svg',
+            description: 'Plataforma de menú digital con QR para restaurantes',
+            founder: { '@type': 'Organization', name: 'Driva Dev' },
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
             '@type': 'FAQPage',
             mainEntity: FAQS.map(({ q, a }) => ({
               '@type': 'Question',

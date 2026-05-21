@@ -77,8 +77,10 @@ export async function generateMetadata({
       description,
       url,
       type: 'website',
+      locale: 'es_AR',
+      siteName: 'MenuDig',
       ...(restaurant.logoUrl && {
-        images: [{ url: restaurant.logoUrl, alt: `Logo de ${restaurant.name}` }],
+        images: [{ url: restaurant.logoUrl, width: 400, height: 400, alt: `Logo de ${restaurant.name}` }],
       }),
     },
     twitter: {
@@ -161,11 +163,13 @@ export default async function MenuPage({
           name: dish.name,
           ...(dish.description && { description: dish.description }),
           ...(dish.imageUrl && { image: dish.imageUrl }),
-          offers: {
-            '@type': 'Offer',
-            price: (dish.price / 100).toFixed(2),
-            priceCurrency: 'ARS',
-          },
+          ...(dish.price > 0 && {
+            offers: {
+              '@type': 'Offer',
+              price: (dish.price / 100).toFixed(2),
+              priceCurrency: 'ARS',
+            },
+          }),
         })),
       })),
     },
@@ -179,6 +183,17 @@ export default async function MenuPage({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantSchema) }}
+    />
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'MenuDig', item: 'https://menudig.com.ar' },
+          { '@type': 'ListItem', position: 2, name: serializedRestaurant.name, item: `https://menudig.com.ar/menu/${serializedRestaurant.slug}` },
+        ],
+      }) }}
     />
     <div className="menu-theme min-h-screen bg-brand-fondo">
       {/* Max-width container — responsive centering */}
@@ -248,7 +263,13 @@ export default async function MenuPage({
         {/* Footer */}
         <footer className="mt-8 pb-16 px-4 text-center border-t border-gray-100">
           <p className="text-sm font-normal text-brand-texto mt-6">
-            Desarrollado por Driva Dev
+            Menú creado con{' '}
+            <a
+              href="https://menudig.com.ar"
+              className="font-medium text-brand-titulares hover:underline"
+            >
+              MenuDig
+            </a>
           </p>
         </footer>
 
