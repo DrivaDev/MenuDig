@@ -178,7 +178,11 @@ export default function CategoriesClient({
   const [, startReorderTransition]              = useTransition()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  // Re-sync subcategories when server re-renders after router.refresh()
+  // Re-sync state when server re-renders after router.refresh()
+  useEffect(() => {
+    setCategories(initialCategories)
+  }, [initialCategories]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     setSubcatsByCategory(initialSubcats)
   }, [initialSubcats]) // eslint-disable-line react-hooks/exhaustive-deps
