@@ -64,7 +64,6 @@ interface SubcategoryItem {
 
 interface DishRowProps {
   dish: Dish
-  subcatName?: string
   onEdit: () => void
   onDeleteRequest: () => void
   onDeleteConfirm: () => void
@@ -76,7 +75,6 @@ interface DishRowProps {
 
 function SortableDishRow({
   dish,
-  subcatName,
   onEdit,
   onDeleteRequest,
   onDeleteConfirm,
@@ -124,17 +122,12 @@ function SortableDishRow({
         )}
       </div>
 
-      {/* Name + price + subcategory */}
+      {/* Name + price */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-brand-texto truncate">{dish.name}</p>
         <p className="text-xs font-mono text-brand-texto/60">
           {dish.price > 0 ? `$${(dish.price / 100).toLocaleString('es-AR')}` : '—'}
         </p>
-        {subcatName && (
-          <span className="inline-flex items-center mt-0.5 px-1.5 py-0 rounded text-xs font-normal bg-brand-acento/50 text-brand-titulares">
-            {subcatName}
-          </span>
-        )}
       </div>
 
       {/* Availability toggle */}
@@ -342,7 +335,20 @@ export default function DishesClient({ dishes: initialDishes, categories, subcat
       {categories.length > 0 && totalDishes > 0 && (
         <div className="flex flex-col gap-4">
           {categories.map(cat => {
-            const catDishes = dishesByCategory[cat._id] ?? []
+            const catDishes   = dishesByCategory[cat._id] ?? []
+            const catSubcats  = subcategoriesByCategory[cat._id] ?? []
+
+            // Build ordered flat list: no-subcat first, then per subcategory
+            const noSubcat = catDishes.filter(d => !d.subcategoryId || !subcategoryById[String(d.subcategoryId)])
+            const bySubcat  = catSubcats.map(sub => ({
+              sub,
+              dishes: catDishes.filter(d => d.subcategoryId && String(d.subcategoryId) === sub._id),
+            }))
+            const orderedDishes = [
+              ...noSubcat,
+              ...bySubcat.flatMap(g => g.dishes),
+            ]
+
             return (
               <div
                 key={cat._id}
@@ -367,14 +373,14 @@ export default function DishesClient({ dishes: initialDishes, categories, subcat
                     onDragEnd={handleDragEnd(cat._id)}
                   >
                     <SortableContext
-                      items={catDishes.map(d => d._id)}
+                      items={orderedDishes.map(d => d._id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      {catDishes.map(dish => (
+                      {/* Dishes without subcategory */}
+                      {noSubcat.map(dish => (
                         <SortableDishRow
                           key={dish._id}
                           dish={dish}
-                          subcatName={dish.subcategoryId ? subcategoryById[dish.subcategoryId] : undefined}
                           onEdit={() => openEdit(dish)}
                           onDeleteRequest={() => setConfirmDeleteId(dish._id)}
                           onDeleteConfirm={() => handleDelete(dish._id)}
@@ -384,6 +390,32 @@ export default function DishesClient({ dishes: initialDishes, categories, subcat
                           onToggleError={(msg) => showToast('error', msg)}
                         />
                       ))}
+
+                      {/* Subcategory groups */}
+                      {bySubcat.map(({ sub, dishes: subDishes }) =>
+                        subDishes.length === 0 ? null : (
+                          <div key={sub._id}>
+                            <div className="px-4 py-2 bg-brand-acento/20 border-y border-brand-acento/50 flex items-center">
+                              <span className="text-xs font-medium text-brand-titulares uppercase tracking-wide">
+                                {sub.name}
+                              </span>
+                            </div>
+                            {subDishes.map(dish => (
+                              <SortableDishRow
+                                key={dish._id}
+                                dish={dish}
+                                onEdit={() => openEdit(dish)}
+                                onDeleteRequest={() => setConfirmDeleteId(dish._id)}
+                                onDeleteConfirm={() => handleDelete(dish._id)}
+                                onDeleteCancel={() => setConfirmDeleteId(null)}
+                                confirmDeleteId={confirmDeleteId}
+                                deletingId={deletingId}
+                                onToggleError={(msg) => showToast('error', msg)}
+                              />
+                            ))}
+                          </div>
+                        )
+                      )}
                     </SortableContext>
                   </DndContext>
                 )}
