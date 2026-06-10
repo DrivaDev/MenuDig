@@ -7,6 +7,7 @@ import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
 import { Dish } from '@/models/Dish'
 import { Category } from '@/models/Category'
+import { Subcategory } from '@/models/Subcategory'
 
 // Delete a Cloudinary asset using the REST API + native crypto (no SDK needed)
 async function cloudinaryDestroy(publicId: string) {
@@ -47,11 +48,13 @@ export async function createDish(prevState: any, formData: FormData) {
   if (!isFinite(price)) return { success: false, error: 'Ingresá un precio válido en pesos.' }
   if (price < 0) return { success: false, error: 'El precio no puede ser negativo.' }
 
-  const description   = formData.get('description')?.toString().trim() ?? ''
-  const imageUrl      = formData.get('imageUrl')?.toString() ?? ''
-  const imagePublicId = formData.get('imagePublicId')?.toString() ?? ''
-  const allergens     = formData.getAll('allergens').map(String)
-  const available     = formData.get('available') === 'true'
+  const description     = formData.get('description')?.toString().trim() ?? ''
+  const imageUrl        = formData.get('imageUrl')?.toString() ?? ''
+  const imagePublicId   = formData.get('imagePublicId')?.toString() ?? ''
+  const allergens       = formData.getAll('allergens').map(String)
+  const tags            = formData.getAll('tags').map(String)
+  const available       = formData.get('available') === 'true'
+  const subcategoryIdRaw = formData.get('subcategoryId')?.toString() || null
 
   await dbConnect()
   const restaurant = await Restaurant.findOne({ clerkId: userId }).lean<{ _id: string; slug: string }>()
@@ -59,6 +62,17 @@ export async function createDish(prevState: any, formData: FormData) {
 
   const category = await Category.findOne({ _id: categoryId, restaurantId: restaurant._id }).lean()
   if (!category) return { success: false, error: 'Categoría no válida.' }
+
+  let subcategoryId: string | null = null
+  if (subcategoryIdRaw) {
+    const sub = await Subcategory.findOne({
+      _id: subcategoryIdRaw,
+      restaurantId: restaurant._id,
+      categoryId,
+    }).lean()
+    if (!sub) return { success: false, error: 'Subcategoría no válida.' }
+    subcategoryId = subcategoryIdRaw
+  }
 
   // Assign order = max order in this category + 1
   const maxOrderDoc = await Dish
@@ -69,12 +83,14 @@ export async function createDish(prevState: any, formData: FormData) {
   await Dish.create({
     restaurantId: restaurant._id,
     categoryId,
+    subcategoryId,
     name,
     description,
     price,
     imageUrl,
     imagePublicId,
     allergens,
+    tags,
     available,
     order: (maxOrderDoc?.order ?? -1) + 1,
   })
@@ -100,11 +116,13 @@ export async function updateDish(prevState: any, formData: FormData) {
   if (!isFinite(price)) return { success: false, error: 'Ingresá un precio válido en pesos.' }
   if (price < 0) return { success: false, error: 'El precio no puede ser negativo.' }
 
-  const description   = formData.get('description')?.toString().trim() ?? ''
-  const imageUrl      = formData.get('imageUrl')?.toString() ?? ''
-  const imagePublicId = formData.get('imagePublicId')?.toString() ?? ''
-  const allergens     = formData.getAll('allergens').map(String)
-  const available     = formData.get('available') === 'true'
+  const description     = formData.get('description')?.toString().trim() ?? ''
+  const imageUrl        = formData.get('imageUrl')?.toString() ?? ''
+  const imagePublicId   = formData.get('imagePublicId')?.toString() ?? ''
+  const allergens       = formData.getAll('allergens').map(String)
+  const tags            = formData.getAll('tags').map(String)
+  const available       = formData.get('available') === 'true'
+  const subcategoryIdRaw = formData.get('subcategoryId')?.toString() || null
 
   await dbConnect()
   const restaurant = await Restaurant.findOne({ clerkId: userId }).lean<{ _id: string; slug: string }>()
@@ -113,12 +131,23 @@ export async function updateDish(prevState: any, formData: FormData) {
   const category = await Category.findOne({ _id: categoryId, restaurantId: restaurant._id }).lean()
   if (!category) return { success: false, error: 'Categoría no válida.' }
 
+  let subcategoryId: string | null = null
+  if (subcategoryIdRaw) {
+    const sub = await Subcategory.findOne({
+      _id: subcategoryIdRaw,
+      restaurantId: restaurant._id,
+      categoryId,
+    }).lean()
+    if (!sub) return { success: false, error: 'Subcategoría no válida.' }
+    subcategoryId = subcategoryIdRaw
+  }
+
   const dish = await Dish.findOne({ _id: dishId, restaurantId: restaurant._id })
   if (!dish) return { success: false, error: 'Plato no encontrado.' }
 
   await Dish.updateOne(
     { _id: dishId, restaurantId: restaurant._id },
-    { $set: { name, description, price, categoryId, imageUrl, imagePublicId, allergens, available } }
+    { $set: { name, description, price, categoryId, subcategoryId, imageUrl, imagePublicId, allergens, tags, available } }
   )
 
   revalidatePath('/menu/' + restaurant.slug)

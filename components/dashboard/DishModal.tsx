@@ -5,18 +5,22 @@ import { useActionState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { createDish, updateDish } from '@/actions/dishes'
 import { ALLERGENS } from '@/lib/allergens'
+import { TAGS } from '@/lib/tags'
 
 interface Category { _id: string; name: string }
+interface SubcategoryItem { _id: string; name: string }
 interface Dish {
   _id: string; name: string; description: string; price: number;
   available: boolean; imageUrl: string; imagePublicId: string;
-  categoryId?: string; allergens: string[]
+  categoryId?: string; allergens: string[]; tags?: string[];
+  subcategoryId?: string | null
 }
 
 interface Props {
   mode: 'create' | 'edit'
   dish: Dish | null
   categories: Category[]
+  subcategoriesByCategory: Record<string, SubcategoryItem[]>
   onClose: () => void
   onSuccess: (message: string) => void
   onError: (message: string) => void
@@ -24,7 +28,7 @@ interface Props {
 
 const initialState = { success: false as boolean, error: undefined as string | undefined }
 
-export default function DishModal({ mode, dish, categories, onClose, onSuccess, onError }: Props) {
+export default function DishModal({ mode, dish, categories, subcategoriesByCategory, onClose, onSuccess, onError }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const action = mode === 'edit' ? updateDish : createDish
   const [state, formAction, pending] = useActionState(action, initialState)
@@ -34,8 +38,10 @@ export default function DishModal({ mode, dish, categories, onClose, onSuccess, 
   const [description, setDescription] = useState(dish?.description ?? '')
   const [price, setPrice]           = useState(dish ? (dish.price / 100).toFixed(2) : '')
   const [categoryId, setCategoryId] = useState(dish?.categoryId ?? '')
-  const [allergens, setAllergens]   = useState<string[]>(dish?.allergens ?? [])
-  const [available, setAvailable]   = useState(dish?.available ?? true)
+  const [allergens, setAllergens]       = useState<string[]>(dish?.allergens ?? [])
+  const [tags, setTags]                 = useState<string[]>(dish?.tags ?? [])
+  const [subcategoryId, setSubcategoryId] = useState(dish?.subcategoryId ?? '')
+  const [available, setAvailable]       = useState(dish?.available ?? true)
 
   // ── Image upload state — managed separately from form (client-side upload) ──
   const [imageUrl, setImageUrl]           = useState(dish?.imageUrl ?? '')
@@ -59,6 +65,12 @@ export default function DishModal({ mode, dish, categories, onClose, onSuccess, 
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     )
   }
+
+  function toggleTag(key: string) {
+    setTags(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+  }
+
+  const currentSubcats = subcategoriesByCategory[categoryId] ?? []
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -204,7 +216,7 @@ export default function DishModal({ mode, dish, categories, onClose, onSuccess, 
                 id="dish-category"
                 name="categoryId"
                 value={categoryId}
-                onChange={e => setCategoryId(e.target.value)}
+                onChange={e => { setCategoryId(e.target.value); setSubcategoryId('') }}
                 disabled={pending}
                 className="w-full border border-gray-200 rounded-md px-3 py-3 text-sm font-normal text-brand-texto bg-white focus:outline-none focus:border-brand-principal focus:ring-1 focus:ring-brand-principal transition-colors duration-100 cursor-pointer disabled:bg-gray-50"
               >
@@ -214,6 +226,28 @@ export default function DishModal({ mode, dish, categories, onClose, onSuccess, 
                 ))}
               </select>
             </div>
+
+            {/* Subcategory selector — only shown when selected category has subcategories */}
+            {currentSubcats.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-brand-texto" htmlFor="dish-subcat">
+                  Subcategoría
+                </label>
+                <select
+                  id="dish-subcat"
+                  name="subcategoryId"
+                  value={subcategoryId}
+                  onChange={e => setSubcategoryId(e.target.value)}
+                  disabled={pending}
+                  className="w-full border border-gray-200 rounded-md px-3 py-3 text-sm font-normal text-brand-texto bg-white focus:outline-none focus:border-brand-principal focus:ring-1 focus:ring-brand-principal transition-colors duration-100 cursor-pointer disabled:bg-gray-50"
+                >
+                  <option value="">Sin subcategoría</option>
+                  {currentSubcats.map(sub => (
+                    <option key={sub._id} value={sub._id}>{sub.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Image upload */}
             <div className="flex flex-col gap-2">
@@ -264,6 +298,30 @@ export default function DishModal({ mode, dish, categories, onClose, onSuccess, 
                 ))}
               </div>
               <p className="text-xs font-light text-brand-texto">14 alérgenos EU — Reglamento 1169/2011</p>
+            </div>
+
+            {/* Tags grid — pathogen suitability + warnings */}
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-brand-texto">Badges</span>
+              <div className="grid grid-cols-2 gap-2">
+                {TAGS.map(tag => (
+                  <label
+                    key={tag.key}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 cursor-pointer hover:bg-brand-fondo transition-colors duration-100 has-[:checked]:border-brand-acento has-[:checked]:bg-brand-acento/30"
+                  >
+                    <input
+                      type="checkbox"
+                      name="tags"
+                      value={tag.key}
+                      checked={tags.includes(tag.key)}
+                      onChange={() => toggleTag(tag.key)}
+                      className="w-4 h-4 accent-brand-principal"
+                    />
+                    <span className="text-sm font-normal text-brand-texto">{tag.label}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs font-light text-brand-texto">Apto para condiciones de salud y badges de advertencia/características.</p>
             </div>
 
             {/* Availability */}

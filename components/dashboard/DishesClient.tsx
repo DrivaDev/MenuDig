@@ -50,7 +50,14 @@ interface Dish {
   imagePublicId: string
   categoryId?: string
   allergens: string[]
+  tags?: string[]
+  subcategoryId?: string | null
   order: number
+}
+
+interface SubcategoryItem {
+  _id: string
+  name: string
 }
 
 // ── Sortable dish row ─────────────────────────────────────────────────────────
@@ -171,9 +178,10 @@ function SortableDishRow({
 interface Props {
   dishes: Dish[]
   categories: Category[]
+  subcategoriesByCategory: Record<string, SubcategoryItem[]>
 }
 
-export default function DishesClient({ dishes: initialDishes, categories }: Props) {
+export default function DishesClient({ dishes: initialDishes, categories, subcategoriesByCategory }: Props) {
   const router = useRouter()
 
   // Group dishes by category, preserving server-side order
@@ -377,6 +385,7 @@ export default function DishesClient({ dishes: initialDishes, categories }: Prop
           mode={editTarget ? 'edit' : 'create'}
           dish={editTarget}
           categories={categories}
+          subcategoriesByCategory={subcategoriesByCategory}
           onClose={() => { setModalOpen(false); setEditTarget(null) }}
           onSuccess={handleModalSuccess}
           onError={(msg) => showToast('error', msg)}

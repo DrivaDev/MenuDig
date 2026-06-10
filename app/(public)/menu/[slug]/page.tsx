@@ -5,6 +5,7 @@ import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant as RestaurantModel } from '@/models/Restaurant'
 import { Category as CategoryModel } from '@/models/Category'
 import { Dish as DishModel } from '@/models/Dish'
+import { Subcategory as SubcategoryModel } from '@/models/Subcategory'
 import { MenuCategoryNav } from '@/components/menu/MenuCategoryNav'
 import { DishRow } from '@/components/menu/DishRow'
 
@@ -38,14 +39,23 @@ interface CategoryData {
   order: number
 }
 
+interface SubcategoryData {
+  _id: string
+  categoryId: string
+  name: string
+  order: number
+}
+
 interface DishData {
   _id: string
   categoryId: string
+  subcategoryId?: string | null
   name: string
   description: string
   price: number
   imageUrl: string
   allergens: string[]
+  tags?: string[]
 }
 
 export async function generateMetadata({
@@ -106,9 +116,10 @@ export default async function MenuPage({
   const restaurant = await RestaurantModel.findOne({ slug }).lean<RestaurantData>()
   if (!restaurant) notFound()
 
-  const [categories, dishes] = await Promise.all([
+  const [categories, dishes, subcategories] = await Promise.all([
     CategoryModel.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean<CategoryData[]>(),
     DishModel.find({ restaurantId: restaurant._id, available: true }).sort({ order: 1, createdAt: 1 }).lean<DishData[]>(),
+    SubcategoryModel.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean<SubcategoryData[]>(),
   ])
 
   // Group dishes by categoryId — server-side, no client round-trip (per D-16)
@@ -119,9 +130,18 @@ export default async function MenuPage({
     dishesByCategory[key].push(dish)
   }
 
+  // Group subcategories by categoryId
+  const subcatsByCategory: Record<string, SubcategoryData[]> = {}
+  for (const sub of subcategories) {
+    const key = String(sub.categoryId)
+    if (!subcatsByCategory[key]) subcatsByCategory[key] = []
+    subcatsByCategory[key].push(sub)
+  }
+
   // Serialize to plain JSON — removes Mongoose ObjectId instances (per project pattern)
   const serializedCategories: CategoryData[] = JSON.parse(JSON.stringify(categories))
   const serializedDishesByCategory: Record<string, DishData[]> = JSON.parse(JSON.stringify(dishesByCategory))
+  const serializedSubcatsByCategory: Record<string, SubcategoryData[]> = JSON.parse(JSON.stringify(subcatsByCategory))
   const serializedRestaurant: RestaurantData = JSON.parse(JSON.stringify(restaurant))
 
   // Build theme CSS — overrides brand tokens so all Tailwind brand classes reflect custom palette
@@ -239,7 +259,23 @@ export default async function MenuPage({
             </div>
           ) : (
             populatedCategories.map(cat => {
-              const catDishes = serializedDishesByCategory[cat._id] ?? []
+              const catDishes  = serializedDishesByCategory[cat._id] ?? []
+              const catSubcats = serializedSubcatsByCategory[cat._id] ?? []
+              const hasSubcats = catSubcats.length > 0
+
+              const noSubcatDishes = hasSubcats
+                ? catDishes.filter(d => !d.subcategoryId)
+                : catDishes
+
+              const dishesBySubcat: Record<string, DishData[]> = {}
+              if (hasSubcats) {
+                for (const sub of catSubcats) {
+                  dishesBySubcat[sub._id] = catDishes.filter(
+                    d => d.subcategoryId && String(d.subcategoryId) === sub._id
+                  )
+                }
+              }
+
               return (
                 <section
                   key={cat._id}
@@ -251,9 +287,29 @@ export default async function MenuPage({
                       {cat.name}
                     </h2>
                   </div>
-                  {catDishes.map(dish => (
+
+                  {/* Dishes without a subcategory */}
+                  {noSubcatDishes.map(dish => (
                     <DishRow key={dish._id} dish={dish} />
                   ))}
+
+                  {/* Subcategory groups */}
+                  {hasSubcats && catSubcats.map(sub => {
+                    const subDishes = dishesBySubcat[sub._id] ?? []
+                    if (subDishes.length === 0) return null
+                    return (
+                      <div key={sub._id}>
+                        <div className="px-4 py-2 bg-brand-fondo/60 border-b border-gray-100">
+                          <h3 className="text-sm font-medium text-brand-titulares/70 uppercase tracking-wide">
+                            {sub.name}
+                          </h3>
+                        </div>
+                        {subDishes.map(dish => (
+                          <DishRow key={dish._id} dish={dish} />
+                        ))}
+                      </div>
+                    )
+                  })}
                 </section>
               )
             })

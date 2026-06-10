@@ -1,7 +1,9 @@
 import Image from 'next/image'
 import { AllergenBadge } from '@/components/menu/AllergenBadge'
+import { TagBadge } from '@/components/menu/TagBadge'
 import { ImagePlaceholder } from '@/components/menu/ImagePlaceholder'
 import type { AllergenKey } from '@/lib/allergens'
+import type { TagKey } from '@/lib/tags'
 
 interface Dish {
   _id: string
@@ -10,6 +12,7 @@ interface Dish {
   price: number        // CENTS integer
   imageUrl: string
   allergens: string[]
+  tags?: string[]
 }
 
 interface Props {
@@ -53,6 +56,13 @@ export function DishRow({ dish }: Props) {
           <div className="flex items-center gap-1 flex-wrap mt-2">
             {dish.allergens.map(key => (
               <AllergenBadge key={key} allergenKey={key as AllergenKey} />
+            ))}
+          </div>
+        )}
+        {(dish.tags?.length ?? 0) > 0 && (
+          <div className="flex items-center gap-1 flex-wrap mt-1.5">
+            {dish.tags!.map(key => (
+              <TagBadge key={key} tagKey={key as TagKey} />
             ))}
           </div>
         )}

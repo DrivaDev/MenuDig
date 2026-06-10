@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   DndContext,
@@ -19,8 +19,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Tag, CheckCircle2, XCircle, GripVertical, Pencil, Trash2 } from 'lucide-react'
+import { Tag, CheckCircle2, XCircle, GripVertical, Pencil, Trash2, Layers } from 'lucide-react'
 import CategoryModal from './CategoryModal'
+import SubcategoryModal from './SubcategoryModal'
 import { deleteCategory, reorderCategories } from '@/actions/categories'
 
 interface Category {
@@ -29,11 +30,17 @@ interface Category {
   order: number
 }
 
+interface SubcategoryItem {
+  _id: string
+  name: string
+}
+
 // ── Sortable row ──────────────────────────────────────────────────────────────
 
 interface RowProps {
   cat: Category
   onEdit: () => void
+  onManageSubs: () => void
   confirmDeleteId: string | null
   setConfirmDeleteId: (id: string | null) => void
   deletePending: boolean
@@ -45,6 +52,7 @@ interface RowProps {
 function SortableCategoryRow({
   cat,
   onEdit,
+  onManageSubs,
   confirmDeleteId,
   setConfirmDeleteId,
   deletePending,
@@ -86,6 +94,14 @@ function SortableCategoryRow({
       <div className="flex items-center gap-2">
         {confirmDeleteId !== cat._id ? (
           <>
+            <button
+              onClick={onManageSubs}
+              aria-label="Gestionar subcategorías"
+              title="Subcategorías"
+              className="flex items-center justify-center w-8 h-8 rounded-md border border-brand-acento bg-white text-brand-texto hover:bg-brand-fondo transition-colors duration-100"
+            >
+              <Layers size={14} />
+            </button>
             <button
               onClick={onEdit}
               aria-label="Editar categoría"
@@ -144,17 +160,28 @@ function SortableCategoryRow({
 
 interface Props {
   categories: Category[]
+  subcategoriesByCategory: Record<string, SubcategoryItem[]>
 }
 
-export default function CategoriesClient({ categories: initialCategories }: Props) {
+export default function CategoriesClient({
+  categories: initialCategories,
+  subcategoriesByCategory: initialSubcats,
+}: Props) {
   const router = useRouter()
   const [categories, setCategories]             = useState<Category[]>(initialCategories)
+  const [subcatsByCategory, setSubcatsByCategory] = useState<Record<string, SubcategoryItem[]>>(initialSubcats)
   const [modalOpen, setModalOpen]               = useState(false)
   const [editTarget, setEditTarget]             = useState<Category | null>(null)
+  const [subModalTarget, setSubModalTarget]     = useState<Category | null>(null)
   const [confirmDeleteId, setConfirmDeleteId]   = useState<string | null>(null)
   const [deletePending, setDeletePending]       = useState(false)
   const [, startReorderTransition]              = useTransition()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  // Re-sync subcategories when server re-renders after router.refresh()
+  useEffect(() => {
+    setSubcatsByCategory(initialSubcats)
+  }, [initialSubcats]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -168,6 +195,7 @@ export default function CategoriesClient({ categories: initialCategories }: Prop
 
   function openCreate() { setEditTarget(null); setModalOpen(true) }
   function openEdit(cat: Category) { setEditTarget(cat); setModalOpen(true) }
+  function openSubcategories(cat: Category) { setSubModalTarget(cat) }
 
   function handleModalSuccess(message: string) {
     setModalOpen(false)
@@ -244,6 +272,7 @@ export default function CategoriesClient({ categories: initialCategories }: Prop
                     key={cat._id}
                     cat={cat}
                     onEdit={() => openEdit(cat)}
+                    onManageSubs={() => openSubcategories(cat)}
                     confirmDeleteId={confirmDeleteId}
                     setConfirmDeleteId={setConfirmDeleteId}
                     deletePending={deletePending}
@@ -258,7 +287,7 @@ export default function CategoriesClient({ categories: initialCategories }: Prop
         )}
       </div>
 
-      {/* Modal */}
+      {/* Category modal */}
       {modalOpen && (
         <CategoryModal
           mode={editTarget ? 'edit' : 'create'}
@@ -266,6 +295,17 @@ export default function CategoriesClient({ categories: initialCategories }: Prop
           onClose={() => { setModalOpen(false); setEditTarget(null) }}
           onSuccess={handleModalSuccess}
           onError={(msg) => showToast('error', msg)}
+        />
+      )}
+
+      {/* Subcategory modal */}
+      {subModalTarget && (
+        <SubcategoryModal
+          categoryId={subModalTarget._id}
+          categoryName={subModalTarget.name}
+          subcategories={subcatsByCategory[subModalTarget._id] ?? []}
+          onClose={() => setSubModalTarget(null)}
+          onChanged={() => router.refresh()}
         />
       )}
 

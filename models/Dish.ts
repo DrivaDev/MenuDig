@@ -11,6 +11,8 @@ const DishSchema = new Schema(
     imageUrl:      { type: String, default: '' },
     imagePublicId: { type: String, default: '' },
     allergens:     { type: [String], default: [] },
+    tags:          { type: [String], default: [] },
+    subcategoryId: { type: Schema.Types.ObjectId, ref: 'Subcategory', default: null },
     order:         { type: Number, default: 0 },
   },
   { timestamps: true }

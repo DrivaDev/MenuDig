@@ -3,7 +3,10 @@ import { redirect } from 'next/navigation'
 import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
 import { Category } from '@/models/Category'
+import { Subcategory } from '@/models/Subcategory'
 import CategoriesClient from '@/components/dashboard/CategoriesClient'
+
+interface SubcategoryLean { _id: string; categoryId: string; name: string; order: number }
 
 export default async function CategoriesPage() {
   const { userId } = await auth()
@@ -16,10 +19,22 @@ export default async function CategoriesPage() {
   }>()
   if (!restaurant) redirect('/dashboard')
 
-  const categories = await Category
-    .find({ restaurantId: restaurant._id })
-    .sort({ order: 1 })
-    .lean()
+  const [categories, subcategories] = await Promise.all([
+    Category.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean(),
+    Subcategory.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean<SubcategoryLean[]>(),
+  ])
 
-  return <CategoriesClient categories={JSON.parse(JSON.stringify(categories))} />
+  const subcatsByCategory: Record<string, { _id: string; name: string }[]> = {}
+  for (const sub of subcategories) {
+    const key = String(sub.categoryId)
+    if (!subcatsByCategory[key]) subcatsByCategory[key] = []
+    subcatsByCategory[key].push({ _id: String(sub._id), name: sub.name })
+  }
+
+  return (
+    <CategoriesClient
+      categories={JSON.parse(JSON.stringify(categories))}
+      subcategoriesByCategory={subcatsByCategory}
+    />
+  )
 }
