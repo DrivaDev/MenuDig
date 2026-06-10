@@ -64,6 +64,7 @@ interface SubcategoryItem {
 
 interface DishRowProps {
   dish: Dish
+  subcatName?: string
   onEdit: () => void
   onDeleteRequest: () => void
   onDeleteConfirm: () => void
@@ -75,6 +76,7 @@ interface DishRowProps {
 
 function SortableDishRow({
   dish,
+  subcatName,
   onEdit,
   onDeleteRequest,
   onDeleteConfirm,
@@ -122,12 +124,17 @@ function SortableDishRow({
         )}
       </div>
 
-      {/* Name + price */}
+      {/* Name + price + subcategory */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-brand-texto truncate">{dish.name}</p>
         <p className="text-xs font-mono text-brand-texto/60">
           {dish.price > 0 ? `$${(dish.price / 100).toLocaleString('es-AR')}` : '—'}
         </p>
+        {subcatName && (
+          <span className="inline-flex items-center mt-0.5 px-1.5 py-0 rounded text-xs font-normal bg-brand-acento/50 text-brand-titulares">
+            {subcatName}
+          </span>
+        )}
       </div>
 
       {/* Availability toggle */}
@@ -183,6 +190,12 @@ interface Props {
 
 export default function DishesClient({ dishes: initialDishes, categories, subcategoriesByCategory }: Props) {
   const router = useRouter()
+
+  // Flat lookup: subcategoryId → name
+  const subcategoryById: Record<string, string> = {}
+  for (const subs of Object.values(subcategoriesByCategory)) {
+    for (const sub of subs) subcategoryById[sub._id] = sub.name
+  }
 
   // Group dishes by category, preserving server-side order
   const [dishesByCategory, setDishesByCategory] = useState<Record<string, Dish[]>>(() => {
@@ -361,6 +374,7 @@ export default function DishesClient({ dishes: initialDishes, categories, subcat
                         <SortableDishRow
                           key={dish._id}
                           dish={dish}
+                          subcatName={dish.subcategoryId ? subcategoryById[dish.subcategoryId] : undefined}
                           onEdit={() => openEdit(dish)}
                           onDeleteRequest={() => setConfirmDeleteId(dish._id)}
                           onDeleteConfirm={() => handleDelete(dish._id)}
