@@ -32,6 +32,18 @@ export async function POST() {
   // ── Call MP API ───────────────────────────────────────────────────────────
   const backUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/suscripcion`
 
+  // Apply pending promo discount if present
+  const BASE_PRICE = 20000
+  let planPrice = BASE_PRICE
+  const pending = restaurant.pendingPromo
+  if (pending?.discount_type && pending.value !== null) {
+    if (pending.discount_type === 'percentage') {
+      planPrice = Math.max(0, Math.round(BASE_PRICE * (1 - pending.value / 100)))
+    } else {
+      planPrice = Math.max(0, BASE_PRICE - pending.value)
+    }
+  }
+
   let mpResponse: Response
   let mpBody: string
 
@@ -47,7 +59,7 @@ export async function POST() {
         auto_recurring: {
           frequency: 1,
           frequency_type: 'months',
-          transaction_amount: 20000,
+          transaction_amount: planPrice,
           currency_id: 'ARS',
         },
         back_url: backUrl,
@@ -81,7 +93,10 @@ export async function POST() {
   // ── Persist & redirect ────────────────────────────────────────────────────
   await Restaurant.updateOne(
     { clerkId: userId },
-    { $set: { subscriptionId: preapproval.id } },
+    {
+      $set:   { subscriptionId: preapproval.id },
+      $unset: { pendingPromo: '' },
+    },
   )
 
   return Response.redirect(preapproval.init_point, 303)

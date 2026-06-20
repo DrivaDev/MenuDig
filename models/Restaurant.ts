@@ -23,6 +23,14 @@ const RestaurantSchema = new Schema(
     subscriptionId:        { type: String, default: '' },   // MP preapproval ID
     subscriptionPeriodEnd: { type: Date,   default: null }, // end of current paid period
 
+    // ── Pending promo (applied before checkout, consumed on subscription create) ──
+    pendingPromo: {
+      codeId:        { type: Schema.Types.ObjectId, ref: 'PromoCode', default: null },
+      code:          { type: String, default: '' },
+      discount_type: { type: String, enum: ['percentage', 'fixed'], default: null },
+      value:         { type: Number, default: null },
+    },
+
     menuColor:      { type: String, default: '#EA580C' }, // accent / active tab
     menuBgColor:    { type: String, default: '#FFF7ED' }, // page background
     menuTitleColor: { type: String, default: '#9A3412' }, // headings & prices
