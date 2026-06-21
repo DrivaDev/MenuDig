@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRight, Clock } from 'lucide-react'
 import { getAllPosts, formatDate } from '@/lib/blog'
 
