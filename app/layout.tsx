@@ -11,22 +11,26 @@ const firaSans = Fira_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL('https://menudig.com.ar'),
   title: {
-    default: 'MenuDig — Menú digital con QR para restaurantes',
+    default: 'Menú Digital con QR para Restaurantes | MenuDig',
     template: '%s | MenuDig',
   },
-  description: 'Creá el menú digital de tu restaurante en minutos. Tus clientes lo ven escaneando un QR, sin descargar nada. 14 días gratis, sin tarjeta.',
+  description: 'Creá el menú digital de tu restaurante con QR en minutos. Tus clientes lo ven desde el celular, sin descargar nada. 14 días gratis sin tarjeta. Argentina.',
+  alternates: {
+    canonical: 'https://menudig.com.ar',
+    languages: { 'es-AR': 'https://menudig.com.ar' },
+  },
   openGraph: {
     type: 'website',
     locale: 'es_AR',
     url: 'https://menudig.com.ar',
     siteName: 'MenuDig',
-    title: 'MenuDig — Menú digital con QR para restaurantes',
-    description: 'Creá el menú digital de tu restaurante en minutos. Tus clientes lo ven escaneando un QR, sin descargar nada. 14 días gratis, sin tarjeta.',
+    title: 'Menú Digital con QR para Restaurantes | MenuDig',
+    description: 'Creá el menú digital de tu restaurante con QR en minutos. Tus clientes lo ven desde el celular, sin descargar nada. 14 días gratis sin tarjeta.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MenuDig — Menú digital con QR para restaurantes',
-    description: 'Creá el menú digital de tu restaurante en minutos. Tus clientes lo ven escaneando un QR, sin descargar nada. 14 días gratis, sin tarjeta.',
+    title: 'Menú Digital con QR para Restaurantes | MenuDig',
+    description: 'Creá el menú digital de tu restaurante con QR en minutos. Tus clientes lo ven desde el celular, sin descargar nada. 14 días gratis sin tarjeta.',
   },
   icons: {
     icon: '/logo.svg',

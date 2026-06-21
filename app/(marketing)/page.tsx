@@ -4,7 +4,20 @@ import Image from 'next/image'
 import { UtensilsCrossed, QrCode, Zap, Palette, Check, X, ChevronDown, ArrowRight, Star, Clock, Smartphone } from 'lucide-react'
 
 export const metadata: Metadata = {
-  alternates: { canonical: 'https://menudig.com.ar' },
+  title: 'Menú Digital con QR para Restaurantes — Gratis | MenuDig',
+  description: 'Creá el menú digital de tu restaurante con QR en minutos. Sin app, sin carta impresa. Actualizaciones al instante. 14 días gratis sin tarjeta. Argentina.',
+  alternates: {
+    canonical: 'https://menudig.com.ar',
+    languages: { 'es-AR': 'https://menudig.com.ar' },
+  },
+  openGraph: {
+    title: 'Menú Digital con QR para Restaurantes — Gratis | MenuDig',
+    description: 'Creá el menú digital de tu restaurante con QR en minutos. Sin app, sin carta impresa. Actualizaciones al instante. 14 días gratis sin tarjeta.',
+  },
+  twitter: {
+    title: 'Menú Digital con QR para Restaurantes — Gratis | MenuDig',
+    description: 'Creá el menú digital de tu restaurante con QR en minutos. Sin app, sin carta impresa. 14 días gratis sin tarjeta.',
+  },
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -240,8 +253,8 @@ export default function LandingPage() {
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-brand-titulares leading-[1.1] tracking-tight">
                 El menú digital<br />
-                <span className="text-brand-principal">que tus clientes</span><br />
-                quieren ver
+                <span className="text-brand-principal">con QR para tu</span><br />
+                restaurante
               </h1>
 
               <p className="mt-6 text-base sm:text-lg font-normal text-brand-texto max-w-lg mx-auto lg:mx-0 leading-relaxed">
@@ -543,6 +556,42 @@ export default function LandingPage() {
             name: 'MenuDig',
             url: 'https://menudig.com.ar',
             description: 'Menú digital con QR para restaurantes',
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'MenuDig',
+            url: 'https://menudig.com.ar',
+            applicationCategory: 'BusinessApplication',
+            operatingSystem: 'Web',
+            description: 'Plataforma de menú digital con QR para restaurantes. Sin app para el cliente, actualizaciones al instante, QR descargable.',
+            offers: {
+              '@type': 'Offer',
+              price: '20000',
+              priceCurrency: 'ARS',
+              priceValidUntil: '2026-12-31',
+              availability: 'https://schema.org/InStock',
+              description: '14 días gratis sin tarjeta, luego $20.000/mes',
+            },
+            featureList: [
+              'Menú digital accesible por QR',
+              'Sin app para el cliente',
+              'Actualizaciones en tiempo real',
+              'Personalización de colores y marca',
+              'QR descargable en alta resolución',
+              'Fotos y descripciones de platos',
+            ],
+            screenshot: 'https://menudig.com.ar/opengraph-image.png',
+            inLanguage: 'es-AR',
+            publisher: {
+              '@type': 'Organization',
+              name: 'Driva Dev',
+            },
           }),
         }}
       />
