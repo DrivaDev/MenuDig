@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
+import { getAllPosts } from '@/lib/blog'
 
 export const revalidate = 3600
 
@@ -21,6 +22,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `https://menudig.com.ar/menu/${r.slug}`,
     lastModified: r.updatedAt,
     changeFrequency: 'weekly',
+    priority: 0.6,
+  }))
+
+  const blogPosts = getAllPosts()
+  const blogEntries: MetadataRoute.Sitemap = blogPosts.map(p => ({
+    url: `https://menudig.com.ar/blog/${p.slug}`,
+    lastModified: new Date(p.date),
+    changeFrequency: 'monthly',
     priority: 0.8,
   }))
 
@@ -31,6 +40,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 1,
     },
+    {
+      url: 'https://menudig.com.ar/blog',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    ...blogEntries,
     ...menuEntries,
   ]
 }

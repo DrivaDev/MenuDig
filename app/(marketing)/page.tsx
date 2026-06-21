@@ -220,6 +220,7 @@ export default function LandingPage() {
             <a href="#funciones" className="hover:text-brand-titulares transition-colors">Funciones</a>
             <a href="#comparacion" className="hover:text-brand-titulares transition-colors">Comparación</a>
             <a href="#preguntas" className="hover:text-brand-titulares transition-colors">Preguntas</a>
+            <Link href="/blog" className="hover:text-brand-titulares transition-colors">Blog</Link>
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
@@ -538,6 +539,7 @@ export default function LandingPage() {
             <a href="#funciones"    className="hover:text-brand-titulares transition-colors">Funciones</a>
             <a href="#comparacion"  className="hover:text-brand-titulares transition-colors">Comparación</a>
             <a href="#preguntas"    className="hover:text-brand-titulares transition-colors">Preguntas</a>
+            <Link href="/blog"      className="hover:text-brand-titulares transition-colors">Blog</Link>
             <Link href="/sign-up"   className="hover:text-brand-titulares transition-colors">Registro</Link>
           </div>
           <p className="text-xs font-light text-brand-texto">
