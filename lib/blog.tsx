@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 
 export interface BlogPost {
   slug:     string
@@ -9,6 +10,8 @@ export interface BlogPost {
   keywords: string[]
   content:  ReactNode
 }
+
+const MD = () => <Link href="/" className="font-semibold text-brand-principal hover:underline">MenuDig</Link>
 
 // ─── Posts ────────────────────────────────────────────────────────────────────
 
@@ -35,8 +38,8 @@ const posts: BlogPost[] = [
           teléfono, y el menú se abre en el navegador en segundos.
         </p>
         <p>
-          Podés mostrar categorías, platos con foto y descripción, precios, alérgenos y más. Y cuando
-          cambiás algo —un precio, un plato nuevo, un producto agotado— el cambio se refleja al instante
+          Podés mostrar categorías, platos con foto y descripción, precios, alérgenos y más. Cuando
+          cambiás algo (un precio, un plato nuevo, un producto agotado), el cambio se refleja al instante
           en todos los QR que ya repartiste.
         </p>
 
@@ -50,8 +53,8 @@ const posts: BlogPost[] = [
             cuesta tiempo y dinero. Con el menú digital, actualizás desde el celular en 30 segundos.
           </li>
           <li>
-            <strong>Cero costo de impresión recurrente.</strong> Una carta de papel de calidad puede costar
-            entre $5.000 y $20.000 por unidad. Un menú digital no se rompe, no se mancha y no se pierde.
+            <strong>Sin costo de reimpresión.</strong> El menú digital no se rompe, no se mancha y no se pierde.
+            Actualizás cuantas veces quieras sin gastar en imprenta.
           </li>
           <li>
             <strong>Mejor experiencia para el cliente.</strong> Los clientes pueden ver fotos de los platos,
@@ -68,7 +71,7 @@ const posts: BlogPost[] = [
           El proceso es simple:
         </p>
         <ol>
-          <li>Creás tu cuenta en una plataforma como MenuDig.</li>
+          <li>Creás tu cuenta en una plataforma como <MD />.</li>
           <li>Cargás tus categorías y platos (con foto, descripción y precio).</li>
           <li>La plataforma genera automáticamente un código QR único para tu local.</li>
           <li>Descargás el QR e imprimís en las mesas, la entrada o donde quieras.</li>
@@ -80,13 +83,13 @@ const posts: BlogPost[] = [
 
         <h2>¿Cuánto cuesta un menú digital en Argentina?</h2>
         <p>
-          Los costos varían según la plataforma. MenuDig, por ejemplo, ofrece 14 días de prueba gratuita sin
-          tarjeta de crédito. Después, el plan mensual es de $20.000 ARS, con todos los platos, categorías y
-          actualizaciones incluidas sin costo adicional.
+          Los costos varían según la plataforma. <MD />, por ejemplo, ofrece 14 días de prueba gratuita sin
+          tarjeta de crédito. Después, el plan mensual incluye todos los platos, categorías y
+          actualizaciones sin costo adicional.
         </p>
         <p>
           Comparado con el costo de reimprimir cartas cada uno o dos meses, el menú digital se amortiza
-          rápidamente —sobre todo en un contexto de precios que cambian con frecuencia.
+          rápidamente, sobre todo en un contexto de precios que cambian con frecuencia.
         </p>
 
         <h2>¿Qué datos necesito para empezar?</h2>
@@ -96,12 +99,12 @@ const posts: BlogPost[] = [
           Las fotos son opcionales, pero mejoran mucho la experiencia del cliente.
         </p>
         <p>
-          En MenuDig, podés tener tu menú público listo en menos de 10 minutos desde que te registrás.
+          En <MD />, podés tener tu menú público listo en menos de 10 minutos desde que te registrás.
         </p>
 
         <h2>Conclusión</h2>
         <p>
-          El menú digital ya no es una ventaja diferencial —es una expectativa. Los clientes lo buscan,
+          El menú digital ya no es una ventaja diferencial: es una expectativa. Los clientes lo buscan,
           los locales que lo tienen reducen costos, y la gestión del menú se vuelve muchísimo más ágil.
           Si todavía no digitalizaste tu carta, el momento es ahora.
         </p>
@@ -131,7 +134,7 @@ const posts: BlogPost[] = [
           inflación, eso puede significar varias reimpresiones al año.
         </p>
         <p>
-          El menú digital tiene un costo fijo mensual (en MenuDig, $20.000 ARS/mes), sin importar cuántas
+          El menú digital tiene un costo fijo mensual (en <MD />, por ejemplo), sin importar cuántas
           veces actualicés. A largo plazo, la ecuación económica generalmente favorece al menú digital.
         </p>
 
@@ -142,7 +145,7 @@ const posts: BlogPost[] = [
           de la experiencia de marca.
         </p>
         <p>
-          El menú digital, en cambio, permite algo que la carta de papel no puede: <strong>fotos de cada plato</strong>.
+          El menú digital, en cambio, permite algo que la carta de papel no puede: mostrar fotos de cada plato.
           Estudios en restaurantes muestran que los platos con foto se piden más. Además, el menú digital
           puede incluir descripciones largas, alérgenos, etiquetas de "picante", "sin TACC", etc.
         </p>
@@ -164,16 +167,6 @@ const posts: BlogPost[] = [
           por cientos de manos, aunque esté limpia, genera incomodidad en algunos comensales. El menú QR
           elimina esa preocupación.
         </p>
-
-        <h2>¿Cuándo conviene la carta de papel?</h2>
-        <p>
-          Hay situaciones donde la carta de papel sigue teniendo sentido:
-        </p>
-        <ul>
-          <li>Restaurantes de lujo donde la carta es parte del ritual y la experiencia de marca.</li>
-          <li>Locales con menú completamente fijo que nunca cambia y pocos platos.</li>
-          <li>Públicos mayores que no usan smartphone con fluidez (aunque esta brecha se achica cada año).</li>
-        </ul>
 
         <h2>¿Cuándo conviene el menú digital?</h2>
         <ul>
@@ -218,14 +211,14 @@ const posts: BlogPost[] = [
           <li><strong>Precio justo.</strong> Buscá opciones con prueba gratuita para testear antes de pagar.</li>
         </ul>
         <p>
-          MenuDig, por ejemplo, incluye QR descargable, personalización de colores y 14 días de prueba
+          <MD />, por ejemplo, incluye QR descargable, personalización de colores y 14 días de prueba
           gratis sin tarjeta.
         </p>
 
         <h2>Paso 2: Creá tu cuenta</h2>
         <p>
           El proceso es el mismo en casi todas las plataformas: ingresás tu email, elegís una contraseña
-          y listo. En MenuDig, además, el sistema genera automáticamente una URL pública para tu menú
+          y listo. En <MD />, además, el sistema genera automáticamente una URL pública para tu menú
           basada en el nombre de tu restaurante (por ejemplo, <code>menudig.com.ar/menu/la-parrilla</code>).
         </p>
 
@@ -236,7 +229,7 @@ const posts: BlogPost[] = [
         </p>
         <p>
           Tip: menos categorías es mejor. Si tenés muchas, usá subcategorías para agrupar (por ejemplo,
-          "Bebidas" → "Con alcohol" / "Sin alcohol").
+          "Bebidas" en "Con alcohol" y "Sin alcohol").
         </p>
 
         <h2>Paso 4: Cargá los platos</h2>
@@ -277,7 +270,7 @@ const posts: BlogPost[] = [
           <li>Carteles en la entrada</li>
           <li>El reverso de la factura</li>
           <li>Stickers en las mesas</li>
-          <li>Un display acrílico (se consiguen por $2.000-$5.000 en librerías o imprenta)</li>
+          <li>Un display acrílico (se consiguen en librerías o imprenta)</li>
         </ul>
 
         <h2>Paso 7: Mantenelo actualizado</h2>
@@ -290,7 +283,7 @@ const posts: BlogPost[] = [
         <p>
           Hacer un menú digital para tu restaurante no requiere conocimientos técnicos ni inversión grande.
           Con las herramientas adecuadas, podés tenerlo funcionando hoy mismo. El primer paso es crear
-          la cuenta —el resto es cargar lo que ya sabés de memoria.
+          la cuenta: el resto es cargar lo que ya sabés de memoria.
         </p>
       </>
     ),
@@ -306,7 +299,7 @@ const posts: BlogPost[] = [
       <>
         <p>
           El menú con código QR es una de las herramientas más adoptadas en la gastronomía de los últimos
-          años. Pero todavía hay dueños de restaurantes —y clientes— con dudas sobre cómo funciona, qué
+          años. Pero todavía hay dueños de restaurantes (y clientes) con dudas sobre cómo funciona, qué
           necesitan para usarlo, y si realmente vale la pena. Acá respondemos las preguntas más frecuentes.
         </p>
 
@@ -337,7 +330,7 @@ const posts: BlogPost[] = [
 
         <h2>¿Los clientes necesitan internet?</h2>
         <p>
-          Sí, necesitan conexión a internet para ver el menú —ya sea datos móviles o el WiFi del local.
+          Sí, necesitan conexión a internet para ver el menú: ya sea datos móviles o el WiFi del local.
           Es una buena práctica ofrecer WiFi gratuito y publicar la contraseña cerca del QR.
         </p>
 
@@ -348,7 +341,7 @@ const posts: BlogPost[] = [
           No necesitás reimprimir el código.
         </p>
         <p>
-          Esto es una de las mayores ventajas del menú digital: el QR físico es permanente, el contenido
+          Esa es una de las mayores ventajas del menú digital: el QR físico es permanente, el contenido
           que muestra es dinámico.
         </p>
 
@@ -360,7 +353,7 @@ const posts: BlogPost[] = [
 
         <h2>¿Puedo tener más de un QR para diferentes zonas del local?</h2>
         <p>
-          Con MenuDig, el QR siempre apunta al mismo menú. Si querés diferencias por zona (por ejemplo,
+          Con <MD />, el QR siempre apunta al mismo menú. Si querés diferencias por zona (por ejemplo,
           carta de terraza vs carta de salón), necesitarías cuentas separadas. Para la mayoría de los
           restaurantes, un único menú es suficiente.
         </p>
@@ -378,7 +371,7 @@ const posts: BlogPost[] = [
 
         <h2>¿Cómo empiezo?</h2>
         <p>
-          Podés crear tu menú QR en MenuDig de forma completamente gratuita durante 14 días.
+          Podés crear tu menú QR en <MD /> de forma completamente gratuita durante 14 días.
           Sin tarjeta, sin compromiso. En menos de 10 minutos tenés el menú listo y el QR para imprimir.
         </p>
       </>
@@ -403,7 +396,7 @@ const posts: BlogPost[] = [
         <h2>Las fotos aumentan el ticket promedio</h2>
         <p>
           Este es el efecto más documentado. Cuando los clientes ven una foto atractiva de un plato,
-          son más propensos a pedirlo —especialmente si es un plato que no habrían elegido solo leyendo
+          son más propensos a pedirlo, sobre todo si es un plato que no habrían elegido solo leyendo
           el nombre.
         </p>
         <p>
@@ -425,8 +418,8 @@ const posts: BlogPost[] = [
 
         <h2>Menos errores de pedido, más satisfacción</h2>
         <p>
-          Cuando el cliente puede leer con detalle lo que incluye cada plato —ingredientes, alérgenos,
-          opciones— hay menos malentendidos con el mozo y menos devoluciones o quejas. Eso se traduce en
+          Cuando el cliente puede leer con detalle lo que incluye cada plato (ingredientes, alérgenos,
+          opciones), hay menos malentendidos con el mozo y menos devoluciones o quejas. Eso se traduce en
           una experiencia más fluida y clientes más satisfechos.
         </p>
 
@@ -452,12 +445,12 @@ const posts: BlogPost[] = [
 
         <h2>El menú como herramienta de branding</h2>
         <p>
-          Un menú digital bien diseñado —con los colores de tu local, tu logo, y fotos de calidad—
+          Un menú digital bien diseñado, con los colores de tu local, tu logo y fotos de calidad,
           refuerza la identidad de tu marca. Los clientes que tienen una experiencia visual positiva
           son más propensos a recomendar el lugar y a volver.
         </p>
         <p>
-          MenuDig permite personalizar colores, tipografía y logo del menú para que se vea como una
+          <MD /> permite personalizar colores y logo del menú para que se vea como una
           extensión de tu marca, no como un template genérico.
         </p>
 
@@ -469,7 +462,7 @@ const posts: BlogPost[] = [
           y mejorar la experiencia del cliente.
         </p>
         <p>
-          Si todavía no lo probaste, en MenuDig tenés 14 días gratis para ver el impacto en tu local
+          Si todavía no lo probaste, en <MD /> tenés 14 días gratis para ver el impacto en tu local
           antes de tomar una decisión.
         </p>
       </>
