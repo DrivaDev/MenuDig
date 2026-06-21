@@ -256,7 +256,7 @@ export default function LandingPage() {
                     <p className="text-2xl sm:text-3xl font-bold text-brand-principal leading-none">
                       {s.value}<span className="text-lg">{s.unit}</span>
                     </p>
-                    <p className="text-[11px] font-light text-brand-texto mt-1 leading-tight max-w-[80px]">{s.label}</p>
+                    <p className="text-[11px] font-light text-brand-texto mt-1 leading-tight whitespace-nowrap">{s.label}</p>
                   </div>
                 ))}
               </div>
