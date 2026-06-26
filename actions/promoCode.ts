@@ -73,18 +73,11 @@ export async function redeemPromoCode(
 
   await PromoCode.updateOne({ _id: promo._id }, { $inc: { uses_count: 1 } })
 
-  const discountLabel =
-    promo.discount_type === 'percentage'
-      ? `${promo.value}% de descuento`
-      : `$${promo.value.toLocaleString('es-AR')} de descuento`
-
   return {
     success: true,
     discount_type: promo.discount_type,
     value: promo.value,
     is_free,
-    message: is_free
-      ? '¡Código aplicado! Tu suscripción está activa.'
-      : `¡Código aplicado! ${discountLabel} en tu próximo cobro.`,
+    message: is_free ? '¡Código aplicado! Tu suscripción está activa.' : '¡Código aplicado!',
   }
 }

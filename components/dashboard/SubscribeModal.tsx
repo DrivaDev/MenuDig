@@ -5,7 +5,18 @@ import { useRouter } from 'next/navigation'
 import { Loader2, Tag, X } from 'lucide-react'
 import { redeemPromoCode, type RedeemState } from '@/actions/promoCode'
 
+const BASE_PRICE = 20000
 const initialState: RedeemState = { success: false }
+
+function calcPrice(discount_type?: string, value?: number): number {
+  if (!discount_type || value == null) return BASE_PRICE
+  if (discount_type === 'percentage') return Math.max(0, Math.round(BASE_PRICE * (1 - value / 100)))
+  return Math.max(0, BASE_PRICE - value)
+}
+
+function formatARS(n: number) {
+  return `$${n.toLocaleString('es-AR')}`
+}
 
 export function SubscribeModal() {
   const [open, setOpen] = useState(false)
@@ -18,7 +29,8 @@ export function SubscribeModal() {
   }
 
   const showConfirm = state.success && state.is_free
-  const showDiscountedMP = state.success && !state.is_free
+  const discountedPrice = calcPrice(state.discount_type, state.value)
+  const hasDiscount = state.success && !state.is_free
 
   return (
     <>
@@ -47,11 +59,24 @@ export function SubscribeModal() {
             </button>
 
             <h2 className="text-lg font-semibold text-brand-titulares mb-1">
-              Plan Mensual — $20.000/mes
+              Plan Mensual
             </h2>
-            <p className="text-sm text-brand-texto mb-5">
-              ¿Tenés un código de descuento? Ingresalo antes de continuar.
-            </p>
+            <div className="flex items-baseline gap-2 mb-5">
+              {hasDiscount ? (
+                <>
+                  <span className="text-2xl font-bold text-brand-principal">
+                    {formatARS(discountedPrice)}<span className="text-sm font-normal text-brand-texto">/mes</span>
+                  </span>
+                  <span className="text-base line-through text-gray-400">
+                    {formatARS(BASE_PRICE)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-2xl font-bold text-brand-principal">
+                  $20.000<span className="text-sm font-normal text-brand-texto">/mes</span>
+                </span>
+              )}
+            </div>
 
             {/* Promo code */}
             <div className="mb-5">
@@ -105,9 +130,7 @@ export function SubscribeModal() {
                     type="submit"
                     className="w-full bg-brand-principal text-white text-sm font-semibold rounded-lg px-4 py-2.5 hover:bg-[#C2410C] transition-colors"
                   >
-                    {showDiscountedMP
-                      ? 'Continuar a Mercado Pago con descuento'
-                      : 'Continuar a Mercado Pago'}
+                    Continuar a Mercado Pago
                   </button>
                 </form>
               )}
