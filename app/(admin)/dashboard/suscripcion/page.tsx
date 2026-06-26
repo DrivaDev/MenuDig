@@ -69,7 +69,12 @@ function getStatusConfig(status: Status, trialDays: number | null): StatusConfig
 
 // ── Page ────────────────────────────────────────────────────────────────────
 
-export default async function SuscripcionPage() {
+export default async function SuscripcionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cancelled?: string; error?: string }>
+}) {
+  const params = await searchParams
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
@@ -92,6 +97,16 @@ export default async function SuscripcionPage() {
 
   return (
     <div className="flex flex-col gap-8 max-w-xl">
+      {params.cancelled && (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-800 font-medium">
+          Tu suscripción fue cancelada exitosamente.
+        </div>
+      )}
+      {params.error === 'cancel' && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-800 font-medium">
+          No se pudo cancelar la suscripción. Intentá más tarde o contactanos.
+        </div>
+      )}
       <div>
         <h1 className="text-2xl font-bold text-brand-titulares mb-1">Suscripción</h1>
         <p className="text-sm font-normal text-brand-texto">
