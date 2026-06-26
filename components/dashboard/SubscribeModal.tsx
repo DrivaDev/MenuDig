@@ -3,9 +3,8 @@
 import { useState, useActionState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Tag, X } from 'lucide-react'
-import { redeemPromoCode } from '@/actions/promoCode'
+import { redeemPromoCode, type RedeemState } from '@/actions/promoCode'
 
-type RedeemState = { success: boolean; error?: string; message?: string }
 const initialState: RedeemState = { success: false }
 
 export function SubscribeModal() {
@@ -15,8 +14,11 @@ export function SubscribeModal() {
 
   function handleClose() {
     setOpen(false)
-    if (state.success) router.refresh()
+    if (state.is_free) router.refresh()
   }
+
+  const showConfirm = state.success && state.is_free
+  const showDiscountedMP = state.success && !state.is_free
 
   return (
     <>
@@ -55,67 +57,67 @@ export function SubscribeModal() {
             <div className="mb-5">
               <div className="flex items-center gap-2 mb-3">
                 <Tag size={14} className="text-brand-titulares" />
-                <span className="text-sm font-medium text-brand-titulares">Código de descuento</span>
+                <span className="text-sm font-medium text-brand-titulares">
+                  Código de descuento
+                </span>
               </div>
 
-              {state.success ? (
-                <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800 font-medium">
-                  {state.message}
+              <form action={formAction} className="flex items-start gap-2">
+                <div className="flex-1 flex flex-col gap-1">
+                  <input
+                    name="code"
+                    type="text"
+                    placeholder="CÓDIGO"
+                    disabled={pending || state.success}
+                    className="border border-gray-200 rounded-md px-3 py-2 text-sm font-mono uppercase placeholder:normal-case focus:outline-none focus:border-brand-principal focus:ring-1 focus:ring-brand-principal disabled:bg-gray-50 w-full"
+                  />
+                  {state.error && (
+                    <p className="text-xs text-red-600">{state.error}</p>
+                  )}
+                  {state.success && state.message && (
+                    <p className="text-xs text-green-700 font-medium">{state.message}</p>
+                  )}
                 </div>
-              ) : (
-                <form action={formAction} className="flex items-start gap-2">
-                  <div className="flex-1 flex flex-col gap-1">
-                    <input
-                      name="code"
-                      type="text"
-                      placeholder="CÓDIGO"
-                      disabled={pending}
-                      className="border border-gray-200 rounded-md px-3 py-2 text-sm font-mono uppercase placeholder:normal-case focus:outline-none focus:border-brand-principal focus:ring-1 focus:ring-brand-principal disabled:bg-gray-50 w-full"
-                    />
-                    {state.error && (
-                      <p className="text-xs text-red-600">{state.error}</p>
-                    )}
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={pending}
-                    className="shrink-0 flex items-center gap-1.5 bg-brand-principal text-white text-sm font-medium rounded-lg px-3 py-2 hover:bg-[#C2410C] disabled:opacity-50 transition-colors"
-                  >
-                    {pending && <Loader2 size={12} className="animate-spin" />}
-                    Aplicar
-                  </button>
-                </form>
-              )}
+                <button
+                  type="submit"
+                  disabled={pending || state.success}
+                  className="shrink-0 flex items-center gap-1.5 bg-brand-principal text-white text-sm font-medium rounded-lg px-3 py-2 hover:bg-[#C2410C] disabled:opacity-50 transition-colors"
+                >
+                  {pending && <Loader2 size={12} className="animate-spin" />}
+                  Aplicar
+                </button>
+              </form>
             </div>
 
+            {/* Actions */}
             <div className="flex flex-col gap-2">
-              {state.success ? (
+              {showConfirm ? (
                 <button
                   type="button"
                   onClick={handleClose}
                   className="w-full bg-brand-principal text-white text-sm font-semibold rounded-lg px-4 py-2.5 hover:bg-[#C2410C] transition-colors"
                 >
-                  Ir al panel
+                  Confirmar
                 </button>
               ) : (
-                <>
-                  <form action="/api/subscription/create" method="POST">
-                    <button
-                      type="submit"
-                      className="w-full bg-brand-principal text-white text-sm font-semibold rounded-lg px-4 py-2.5 hover:bg-[#C2410C] transition-colors"
-                    >
-                      Continuar a Mercado Pago
-                    </button>
-                  </form>
+                <form action="/api/subscription/create" method="POST">
                   <button
-                    type="button"
-                    onClick={handleClose}
-                    className="w-full border border-gray-200 text-brand-texto text-sm font-medium rounded-lg px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                    type="submit"
+                    className="w-full bg-brand-principal text-white text-sm font-semibold rounded-lg px-4 py-2.5 hover:bg-[#C2410C] transition-colors"
                   >
-                    Cancelar
+                    {showDiscountedMP
+                      ? 'Continuar a Mercado Pago con descuento'
+                      : 'Continuar a Mercado Pago'}
                   </button>
-                </>
+                </form>
               )}
+              <button
+                type="button"
+                onClick={handleClose}
+                className="w-full border border-gray-200 text-brand-texto text-sm font-medium rounded-lg px-4 py-2.5 hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
