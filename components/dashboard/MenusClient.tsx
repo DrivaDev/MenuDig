@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Plus, Pencil, Trash2, Clock, CheckCircle2, XCircle, ToggleLeft, ToggleRight } from 'lucide-react'
+import { BookOpen, Pencil, Trash2, Clock, CheckCircle2, XCircle } from 'lucide-react'
 import MenuModal from './MenuModal'
 import { deleteMenu, toggleMenuActive } from '@/actions/menus'
 
@@ -64,14 +64,24 @@ export default function MenusClient({ menus: initialMenus }: Props) {
   }
 
   function handleToggleActive(menuId: string) {
+    const target = menus.find(m => m._id === menuId)
+    if (!target) return
+    const willBeActive = !target.isActive
+
+    // Optimistic update — no wait for server
+    setMenus(prev => prev.map(m => {
+      if (m._id === menuId) return { ...m, isActive: willBeActive }
+      if (willBeActive) return { ...m, isActive: false } // deactivate others
+      return m
+    }))
+
     const fd = new FormData()
     fd.append('menuId', menuId)
     startTransition(async () => {
       const result = await toggleMenuActive({ success: false }, fd)
-      if (result.success) {
-        router.refresh()
-      } else {
+      if (!result.success) {
         showToast('error', result.error ?? 'No se pudo cambiar el estado.')
+        router.refresh() // revert via server state
       }
     })
   }
@@ -153,7 +163,7 @@ export default function MenusClient({ menus: initialMenus }: Props) {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <Clock size={11} className="text-brand-texto/50" />
                       <span className="text-xs font-normal text-brand-texto/70">
-                        {m.startTime} → {m.endTime}
+                        {m.startTime} - {m.endTime}
                       </span>
                       <span className="text-[10px] font-semibold bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
                         Automático
@@ -172,21 +182,22 @@ export default function MenusClient({ menus: initialMenus }: Props) {
                 {menus.length > 1 && isManualMode && (
                   <button
                     onClick={() => handleToggleActive(m._id)}
-                    aria-label={m.isActive ? 'Desactivar' : 'Activar'}
-                    title={m.isActive ? 'Menú activo — click para desactivar' : 'Click para activar'}
-                    className="flex items-center gap-1.5 shrink-0"
+                    aria-label={m.isActive ? 'Desactivar menú' : 'Activar menú'}
+                    className="flex items-center gap-2 shrink-0 group"
                   >
-                    {m.isActive ? (
-                      <>
-                        <ToggleRight size={22} className="text-brand-principal" />
-                        <span className="text-xs font-semibold text-brand-principal">Activo</span>
-                      </>
-                    ) : (
-                      <>
-                        <ToggleLeft size={22} className="text-gray-300" />
-                        <span className="text-xs font-normal text-brand-texto/50">Inactivo</span>
-                      </>
-                    )}
+                    {/* Pill switch */}
+                    <span className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                      m.isActive ? 'bg-brand-principal' : 'bg-gray-200 group-hover:bg-gray-300'
+                    }`}>
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                        m.isActive ? 'translate-x-6' : 'translate-x-1'
+                      }`} />
+                    </span>
+                    <span className={`text-xs font-medium w-14 text-left ${
+                      m.isActive ? 'text-brand-principal' : 'text-brand-texto/40'
+                    }`}>
+                      {m.isActive ? 'Activo' : 'Inactivo'}
+                    </span>
                   </button>
                 )}
 
