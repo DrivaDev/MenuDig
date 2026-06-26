@@ -19,9 +19,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Tag, CheckCircle2, XCircle, GripVertical, Pencil, Trash2, Layers } from 'lucide-react'
+import { Tag, CheckCircle2, XCircle, GripVertical, Pencil, Trash2 } from 'lucide-react'
 import CategoryModal from './CategoryModal'
-import SubcategoryModal from './SubcategoryModal'
 import { deleteCategory, reorderCategories } from '@/actions/categories'
 
 interface Category {
@@ -39,8 +38,8 @@ interface SubcategoryItem {
 
 interface RowProps {
   cat: Category
+  subcats: SubcategoryItem[]
   onEdit: () => void
-  onManageSubs: () => void
   confirmDeleteId: string | null
   setConfirmDeleteId: (id: string | null) => void
   deletePending: boolean
@@ -51,8 +50,8 @@ interface RowProps {
 
 function SortableCategoryRow({
   cat,
+  subcats,
   onEdit,
-  onManageSubs,
   confirmDeleteId,
   setConfirmDeleteId,
   deletePending,
@@ -78,30 +77,36 @@ function SortableCategoryRow({
           : 'hover:bg-brand-acento/30'
       }`}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-brand-texto/40 hover:text-brand-texto/70 transition-colors touch-none"
+          className="cursor-grab active:cursor-grabbing text-brand-texto/40 hover:text-brand-texto/70 transition-colors touch-none shrink-0"
           aria-label="Arrastrar para reordenar"
           tabIndex={-1}
         >
           <GripVertical size={16} />
         </button>
-        <span className="text-sm font-normal text-brand-texto">{cat.name}</span>
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <span className="text-sm font-normal text-brand-texto">{cat.name}</span>
+          {subcats.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {subcats.map(sub => (
+                <span
+                  key={sub._id}
+                  className="text-xs text-brand-titulares/70 bg-brand-acento/50 px-2 py-0.5 rounded-full"
+                >
+                  {sub.name}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         {confirmDeleteId !== cat._id ? (
           <>
-            <button
-              onClick={onManageSubs}
-              aria-label="Gestionar subcategorías"
-              title="Subcategorías"
-              className="flex items-center justify-center w-8 h-8 rounded-md border border-brand-acento bg-white text-brand-texto hover:bg-brand-fondo transition-colors duration-100"
-            >
-              <Layers size={14} />
-            </button>
             <button
               onClick={onEdit}
               aria-label="Editar categoría"
@@ -168,17 +173,15 @@ export default function CategoriesClient({
   subcategoriesByCategory: initialSubcats,
 }: Props) {
   const router = useRouter()
-  const [categories, setCategories]             = useState<Category[]>(initialCategories)
+  const [categories, setCategories]               = useState<Category[]>(initialCategories)
   const [subcatsByCategory, setSubcatsByCategory] = useState<Record<string, SubcategoryItem[]>>(initialSubcats)
-  const [modalOpen, setModalOpen]               = useState(false)
-  const [editTarget, setEditTarget]             = useState<Category | null>(null)
-  const [subModalTarget, setSubModalTarget]     = useState<Category | null>(null)
-  const [confirmDeleteId, setConfirmDeleteId]   = useState<string | null>(null)
-  const [deletePending, setDeletePending]       = useState(false)
-  const [, startReorderTransition]              = useTransition()
+  const [modalOpen, setModalOpen]                 = useState(false)
+  const [editTarget, setEditTarget]               = useState<Category | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId]     = useState<string | null>(null)
+  const [deletePending, setDeletePending]         = useState(false)
+  const [, startReorderTransition]                = useTransition()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  // Re-sync state when server re-renders after router.refresh()
   useEffect(() => {
     setCategories(initialCategories)
   }, [initialCategories]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -199,7 +202,6 @@ export default function CategoriesClient({
 
   function openCreate() { setEditTarget(null); setModalOpen(true) }
   function openEdit(cat: Category) { setEditTarget(cat); setModalOpen(true) }
-  function openSubcategories(cat: Category) { setSubModalTarget(cat) }
 
   function handleModalSuccess(message: string) {
     setModalOpen(false)
@@ -275,8 +277,8 @@ export default function CategoriesClient({
                   <SortableCategoryRow
                     key={cat._id}
                     cat={cat}
+                    subcats={subcatsByCategory[cat._id] ?? []}
                     onEdit={() => openEdit(cat)}
-                    onManageSubs={() => openSubcategories(cat)}
                     confirmDeleteId={confirmDeleteId}
                     setConfirmDeleteId={setConfirmDeleteId}
                     deletePending={deletePending}
@@ -296,20 +298,11 @@ export default function CategoriesClient({
         <CategoryModal
           mode={editTarget ? 'edit' : 'create'}
           category={editTarget}
+          subcategories={editTarget ? (subcatsByCategory[editTarget._id] ?? []) : []}
           onClose={() => { setModalOpen(false); setEditTarget(null) }}
           onSuccess={handleModalSuccess}
           onError={(msg) => showToast('error', msg)}
-        />
-      )}
-
-      {/* Subcategory modal */}
-      {subModalTarget && (
-        <SubcategoryModal
-          categoryId={subModalTarget._id}
-          categoryName={subModalTarget.name}
-          subcategories={subcatsByCategory[subModalTarget._id] ?? []}
-          onClose={() => setSubModalTarget(null)}
-          onChanged={() => router.refresh()}
+          onSubsChanged={() => router.refresh()}
         />
       )}
 
