@@ -6,6 +6,7 @@ import { UtensilsCrossed, QrCode, Zap, Palette, Check, X, ChevronDown, ArrowRigh
 export const metadata: Metadata = {
   title: 'Menú Digital con QR para Restaurantes — Gratis | MenuDig',
   description: 'Creá el menú digital de tu restaurante con QR en minutos. Sin app, sin carta impresa. Actualizaciones al instante. 14 días gratis sin tarjeta. Argentina.',
+  keywords: ['menú digital restaurante', 'carta digital qr restaurante', 'menú qr argentina', 'digitalizar menú restaurante', 'menú online restaurante argentina', 'carta qr sin app'],
   alternates: {
     canonical: 'https://menudig.com.ar',
     languages: { 'es-AR': 'https://menudig.com.ar' },
@@ -460,11 +461,12 @@ export default function LandingPage() {
             <div className="flex flex-col divide-y divide-brand-acento/60">
               {FAQS.map(({ q, a }) => (
                 <details key={q} className="group py-5">
-                  <summary className="flex justify-between items-center cursor-pointer list-none [&::-webkit-details-marker]:hidden gap-4">
+                  <summary className="flex justify-between items-center cursor-pointer list-none [&::-webkit-details-marker]:hidden gap-4" aria-label={q}>
                     <span className="text-base font-semibold text-brand-titulares">{q}</span>
                     <ChevronDown
                       size={18}
                       className="shrink-0 text-brand-texto transition-transform duration-200 group-open:rotate-180"
+                      aria-hidden="true"
                     />
                   </summary>
                   <p className="mt-3 text-sm font-normal text-brand-texto leading-relaxed pr-8">{a}</p>
@@ -546,7 +548,7 @@ export default function LandingPage() {
               '@type': 'Offer',
               price: '20000',
               priceCurrency: 'ARS',
-              priceValidUntil: '2026-12-31',
+              priceValidUntil: `${new Date().getFullYear() + 1}-12-31`,
               availability: 'https://schema.org/InStock',
               description: '14 días gratis sin tarjeta, luego $20.000/mes',
             },

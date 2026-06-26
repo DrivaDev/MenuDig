@@ -39,14 +39,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 1,
+      alternates: { languages: { 'es-AR': 'https://menudig.com.ar' } },
     },
     {
       url: 'https://menudig.com.ar/blog',
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,
+      alternates: { languages: { 'es-AR': 'https://menudig.com.ar/blog' } },
     },
-    ...blogEntries,
+    ...blogEntries.map(e => ({
+      ...e,
+      alternates: { languages: { 'es-AR': e.url } },
+    })),
     ...menuEntries,
   ]
 }

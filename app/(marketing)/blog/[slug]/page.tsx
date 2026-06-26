@@ -32,11 +32,13 @@ export async function generateMetadata({
       locale: 'es_AR',
       siteName: 'MenuDig',
       publishedTime: post.date,
+      images: [{ url: 'https://menudig.com.ar/opengraph-image.png', width: 1200, height: 630, alt: post.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
+      images: ['https://menudig.com.ar/opengraph-image.png'],
     },
   }
 }
@@ -62,6 +64,12 @@ export default async function BlogPostPage({
     dateModified: post.date,
     inLanguage: 'es-AR',
     url: `https://menudig.com.ar/blog/${post.slug}`,
+    image: 'https://menudig.com.ar/opengraph-image.png',
+    author: {
+      '@type': 'Organization',
+      name: 'MenuDig',
+      url: 'https://menudig.com.ar',
+    },
     publisher: {
       '@type': 'Organization',
       name: 'MenuDig',

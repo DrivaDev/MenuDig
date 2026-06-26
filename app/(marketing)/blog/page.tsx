@@ -12,13 +12,31 @@ export const metadata: Metadata = {
     title: 'Blog — Menú digital para restaurantes | MenuDig',
     description: 'Guías, consejos y estrategias para restaurantes argentinos: menú digital con QR, atención al cliente, tecnología gastronómica y más.',
     url: 'https://menudig.com.ar/blog',
+    images: [{ url: 'https://menudig.com.ar/opengraph-image.png', width: 1200, height: 630, alt: 'Blog MenuDig — Menú digital para restaurantes' }],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Blog — Menú digital para restaurantes | MenuDig',
+    description: 'Guías, consejos y estrategias para restaurantes argentinos: menú digital con QR, atención al cliente, tecnología gastronómica y más.',
+    images: ['https://menudig.com.ar/opengraph-image.png'],
+  },
+}
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'MenuDig', item: 'https://menudig.com.ar' },
+    { '@type': 'ListItem', position: 2, name: 'Blog',    item: 'https://menudig.com.ar/blog' },
+  ],
 }
 
 export default function BlogPage() {
   const posts = getAllPosts()
 
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
     <div className="min-h-screen bg-brand-fondo flex flex-col">
 
       <main className="flex-1">
@@ -92,5 +110,6 @@ export default function BlogPage() {
       </footer>
 
     </div>
+    </>
   )
 }
