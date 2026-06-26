@@ -14,7 +14,7 @@ const CATEGORIES = [
         name: 'Tabla de quesos',
         desc: 'Brie, manchego, frutos secos',
         price: '$5.400',
-        img: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a432?w=96&h=96&fit=crop&auto=format',
+        img: 'https://images.unsplash.com/photo-1452195100486-9cc805987862?w=96&h=96&fit=crop&auto=format',
       },
       {
         name: 'Bruschetta classica',
