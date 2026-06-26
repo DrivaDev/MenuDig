@@ -2,10 +2,10 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { useActionState } from 'react'
-import { X, Loader2, Plus, Trash2 } from 'lucide-react'
+import { X, Loader2, Plus, Trash2, Pencil, Check } from 'lucide-react'
 import { createCategory, updateCategory } from '@/actions/categories'
-import { createSubcategory, deleteSubcategory } from '@/actions/subcategories'
-import type { CreateSubcategoryResult, DeleteSubcategoryResult } from '@/actions/subcategories'
+import { createSubcategory, updateSubcategory, deleteSubcategory } from '@/actions/subcategories'
+import type { CreateSubcategoryResult, UpdateSubcategoryResult, DeleteSubcategoryResult } from '@/actions/subcategories'
 
 interface Category {
   _id: string
@@ -50,6 +50,9 @@ export default function CategoryModal({
   const [createSubError, setCreateSubError]         = useState<string | null>(null)
   const [deletingId, setDeletingId]                 = useState<string | null>(null)
   const [confirmDeleteSubId, setConfirmDeleteSubId] = useState<string | null>(null)
+  const [editingSubId, setEditingSubId]             = useState<string | null>(null)
+  const [editingSubName, setEditingSubName]         = useState('')
+  const [savingSubId, setSavingSubId]               = useState<string | null>(null)
 
   useEffect(() => { dialogRef.current?.showModal() }, [])
 
@@ -80,6 +83,31 @@ export default function CategoryModal({
       onSubsChanged?.()
     } else {
       setCreateSubError(result.error ?? 'Error al crear la subcategoría.')
+    }
+  }
+
+  function startEditSub(sub: SubcategoryItem) {
+    setConfirmDeleteSubId(null)
+    setEditingSubId(sub._id)
+    setEditingSubName(sub.name)
+  }
+
+  async function handleSaveSub(subId: string) {
+    const trimmed = editingSubName.trim()
+    if (!trimmed) { setEditingSubId(null); return }
+    const original = subs.find(s => s._id === subId)
+    if (original && trimmed === original.name) { setEditingSubId(null); return }
+
+    setSavingSubId(subId)
+    const fd = new FormData()
+    fd.append('subcategoryId', subId)
+    fd.append('name', trimmed)
+    const result: UpdateSubcategoryResult = await updateSubcategory({ success: false }, fd)
+    setSavingSubId(null)
+    if (result.success) {
+      setSubs(prev => prev.map(s => s._id === subId ? { ...s, name: trimmed } : s))
+      setEditingSubId(null)
+      onSubsChanged?.()
     }
   }
 
@@ -156,38 +184,89 @@ export default function CategoryModal({
                   {subs.map(sub => (
                     <li
                       key={sub._id}
-                      className="flex items-center justify-between px-4 py-2.5 hover:bg-brand-acento/20 transition-colors duration-100"
+                      className="flex items-center gap-2 px-4 py-2.5 hover:bg-brand-acento/20 transition-colors duration-100"
                     >
-                      <span className="text-sm font-normal text-brand-texto">{sub.name}</span>
-                      {confirmDeleteSubId !== sub._id ? (
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDeleteSubId(sub._id)}
-                          aria-label="Eliminar subcategoría"
-                          disabled={!!deletingId}
-                          className="flex items-center justify-center w-7 h-7 rounded-md border border-brand-danger/30 bg-white text-brand-danger hover:bg-brand-danger/10 disabled:opacity-40 transition-colors duration-100"
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                      {/* Inline edit mode */}
+                      {editingSubId === sub._id ? (
+                        <>
+                          <input
+                            type="text"
+                            value={editingSubName}
+                            onChange={e => setEditingSubName(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') { e.preventDefault(); handleSaveSub(sub._id) }
+                              if (e.key === 'Escape') setEditingSubId(null)
+                            }}
+                            autoFocus
+                            disabled={savingSubId === sub._id}
+                            className="flex-1 border border-brand-principal rounded-md px-2 py-1 text-sm font-normal text-brand-texto bg-white focus:outline-none focus:ring-1 focus:ring-brand-principal disabled:bg-gray-50"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveSub(sub._id)}
+                            disabled={savingSubId === sub._id || !editingSubName.trim()}
+                            aria-label="Guardar"
+                            className="flex items-center justify-center w-7 h-7 rounded-md bg-brand-principal text-white hover:bg-[#C2410C] disabled:opacity-50 transition-colors"
+                          >
+                            {savingSubId === sub._id
+                              ? <Loader2 size={12} className="animate-spin" />
+                              : <Check size={13} />
+                            }
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingSubId(null)}
+                            className="flex items-center justify-center w-7 h-7 rounded-md border border-gray-200 text-brand-texto hover:bg-brand-fondo transition-colors"
+                          >
+                            <X size={13} />
+                          </button>
+                        </>
+                      ) : confirmDeleteSubId === sub._id ? (
+                        /* Delete confirm */
+                        <>
+                          <span className="flex-1 text-sm font-normal text-brand-texto">{sub.name}</span>
+                          <div className="flex items-center gap-2 animate-in fade-in duration-150">
+                            <span className="text-xs font-medium text-brand-danger">¿Eliminar?</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSub(sub._id)}
+                              disabled={deletingId === sub._id}
+                              className="text-xs font-medium text-white bg-brand-danger rounded-md px-2 py-1 min-h-[26px] hover:bg-[#B91C1C] disabled:opacity-50 transition-colors"
+                            >
+                              {deletingId === sub._id ? '...' : 'Sí'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteSubId(null)}
+                              className="text-xs font-medium text-brand-texto hover:underline"
+                            >
+                              No
+                            </button>
+                          </div>
+                        </>
                       ) : (
-                        <div className="flex items-center gap-2 animate-in fade-in duration-150">
-                          <span className="text-xs font-medium text-brand-danger">¿Eliminar?</span>
+                        /* Normal row */
+                        <>
+                          <span className="flex-1 text-sm font-normal text-brand-texto">{sub.name}</span>
                           <button
                             type="button"
-                            onClick={() => handleDeleteSub(sub._id)}
-                            disabled={deletingId === sub._id}
-                            className="text-xs font-medium text-white bg-brand-danger rounded-md px-2 py-1 min-h-[26px] hover:bg-[#B91C1C] disabled:opacity-50 transition-colors"
+                            onClick={() => startEditSub(sub)}
+                            aria-label="Editar subcategoría"
+                            disabled={!!deletingId || !!savingSubId}
+                            className="flex items-center justify-center w-7 h-7 rounded-md border border-brand-acento bg-white text-brand-texto hover:bg-brand-fondo disabled:opacity-40 transition-colors duration-100"
                           >
-                            {deletingId === sub._id ? '...' : 'Sí'}
+                            <Pencil size={13} />
                           </button>
                           <button
                             type="button"
-                            onClick={() => setConfirmDeleteSubId(null)}
-                            className="text-xs font-medium text-brand-texto hover:underline"
+                            onClick={() => setConfirmDeleteSubId(sub._id)}
+                            aria-label="Eliminar subcategoría"
+                            disabled={!!deletingId || !!savingSubId}
+                            className="flex items-center justify-center w-7 h-7 rounded-md border border-brand-danger/30 bg-white text-brand-danger hover:bg-brand-danger/10 disabled:opacity-40 transition-colors duration-100"
                           >
-                            No
+                            <Trash2 size={13} />
                           </button>
-                        </div>
+                        </>
                       )}
                     </li>
                   ))}

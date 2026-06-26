@@ -52,6 +52,34 @@ export async function createSubcategory(
   }
 }
 
+export interface UpdateSubcategoryResult {
+  success: boolean
+  error?: string
+}
+
+export async function updateSubcategory(
+  prevState: UpdateSubcategoryResult,
+  formData: FormData,
+): Promise<UpdateSubcategoryResult> {
+  const { userId } = await auth()
+  if (!userId) return { success: false, error: 'No autorizado.' }
+
+  const subcategoryId = formData.get('subcategoryId')?.toString()
+  const name = formData.get('name')?.toString().trim()
+  if (!subcategoryId || !name) return { success: false, error: 'Datos inválidos.' }
+
+  await dbConnect()
+  const restaurant = await Restaurant.findOne({ clerkId: userId }).lean<{ _id: string; slug: string }>()
+  if (!restaurant) return { success: false, error: 'Restaurante no encontrado.' }
+
+  const sub = await Subcategory.findOne({ _id: subcategoryId, restaurantId: restaurant._id })
+  if (!sub) return { success: false, error: 'Subcategoría no encontrada.' }
+
+  await Subcategory.updateOne({ _id: subcategoryId }, { $set: { name } })
+  revalidatePath('/menu/' + restaurant.slug)
+  return { success: true }
+}
+
 export interface DeleteSubcategoryResult {
   success: boolean
   error?: string
