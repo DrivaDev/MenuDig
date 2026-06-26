@@ -23,18 +23,25 @@ interface Props {
 
 const initialState = { success: false as boolean, error: undefined as string | undefined }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
-const MINUTES = ['00', '15', '30', '45']
-
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number)
   return h * 60 + m
 }
 
-function parseTime(t: string | null): { h: string; m: string } {
-  if (!t) return { h: '', m: '00' }
-  const [h, m] = t.split(':')
-  return { h: h ?? '', m: m ?? '00' }
+function isValidTime(t: string): boolean {
+  if (!/^\d{2}:\d{2}$/.test(t)) return false
+  const [h, m] = t.split(':').map(Number)
+  return h >= 0 && h <= 23 && m >= 0 && m <= 59
+}
+
+// Auto-formats raw keystrokes into HH:MM
+function formatTimeInput(raw: string, prev: string): string {
+  // Allow clearing
+  if (raw.length < prev.length) return raw
+
+  const digits = raw.replace(/\D/g, '')
+  if (digits.length <= 2) return digits
+  return digits.slice(0, 2) + ':' + digits.slice(2, 4)
 }
 
 export default function MenuModal({ mode, menu, existingMenus, onClose, onSuccess, onError }: Props) {
@@ -42,20 +49,10 @@ export default function MenuModal({ mode, menu, existingMenus, onClose, onSucces
   const action = mode === 'edit' ? updateMenu : createMenu
   const [state, formAction, pending] = useActionState(action, initialState)
 
-  const [name, setName] = useState(menu?.name ?? '')
-
-  const initStart = parseTime(menu?.startTime ?? null)
-  const initEnd   = parseTime(menu?.endTime ?? null)
-  const [startH, setStartH] = useState(initStart.h)
-  const [startM, setStartM] = useState(initStart.m)
-  const [endH, setEndH]     = useState(initEnd.h)
-  const [endM, setEndM]     = useState(initEnd.m)
-
+  const [name, setName]           = useState(menu?.name ?? '')
+  const [startTime, setStartTime] = useState(menu?.startTime ?? '')
+  const [endTime, setEndTime]     = useState(menu?.endTime ?? '')
   const [clientError, setClientError] = useState<string | null>(null)
-
-  // Derived time strings (empty string when hour not selected = no time)
-  const startTime = startH !== '' ? `${startH}:${startM}` : ''
-  const endTime   = endH   !== '' ? `${endH}:${endM}` : ''
 
   useEffect(() => { dialogRef.current?.showModal() }, [])
 
@@ -67,14 +64,28 @@ export default function MenuModal({ mode, menu, existingMenus, onClose, onSucces
     }
   }, [state]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  function handleTimeChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+    prev: string,
+    set: (v: string) => void
+  ) {
+    set(formatTimeInput(e.target.value, prev))
+  }
+
   function validate(): boolean {
     setClientError(null)
     if (!name.trim()) { setClientError('El nombre del menú es obligatorio.'); return false }
-    if ((startTime && !endTime) || (!startTime && endTime)) {
-      setClientError('Elegí tanto la hora de inicio como la de fin, o dejá ambas vacías.')
+
+    const hasStart = startTime.trim() !== ''
+    const hasEnd   = endTime.trim() !== ''
+
+    if (hasStart !== hasEnd) {
+      setClientError('Ingresá tanto la hora de inicio como la de fin, o dejá ambas vacías.')
       return false
     }
-    if (startTime && endTime) {
+    if (hasStart && hasEnd) {
+      if (!isValidTime(startTime)) { setClientError('Hora de inicio inválida. Usá el formato HH:MM (ej. 09:00).'); return false }
+      if (!isValidTime(endTime))   { setClientError('Hora de fin inválida. Usá el formato HH:MM (ej. 14:30).'); return false }
       const s = timeToMinutes(startTime)
       const e = timeToMinutes(endTime)
       if (s >= e) { setClientError('El horario de inicio debe ser anterior al de fin.'); return false }
@@ -97,9 +108,8 @@ export default function MenuModal({ mode, menu, existingMenus, onClose, onSucces
     formAction(formData)
   }
 
-  const isAutomatic = !!(startTime && endTime)
-
-  const selectClass = 'border border-gray-200 rounded-md px-2 py-2.5 text-sm font-normal text-brand-texto bg-white focus:outline-none focus:border-brand-principal focus:ring-1 focus:ring-brand-principal transition-colors duration-100 disabled:bg-gray-50 cursor-pointer'
+  const isAutomatic = isValidTime(startTime) && isValidTime(endTime)
+  const inputClass = 'w-full border border-gray-200 rounded-md px-3 py-3 text-sm font-mono text-brand-texto bg-white placeholder:text-gray-300 focus:outline-none focus:border-brand-principal focus:ring-1 focus:ring-brand-principal transition-colors duration-100 disabled:bg-gray-50'
 
   return (
     <>
@@ -129,7 +139,6 @@ export default function MenuModal({ mode, menu, existingMenus, onClose, onSucces
             {mode === 'edit' && menu && (
               <input type="hidden" name="menuId" value={menu._id} />
             )}
-            {/* Carry computed time strings to server action */}
             <input type="hidden" name="startTime" value={startTime} />
             <input type="hidden" name="endTime"   value={endTime} />
 
@@ -161,32 +170,38 @@ export default function MenuModal({ mode, menu, existingMenus, onClose, onSucces
                 Con horario: el menú se activa automáticamente. Sin horario: lo activás manualmente.
               </p>
 
-              {/* Time selectors */}
-              <div className="flex items-center gap-2">
-                {/* Start */}
-                <select value={startH} onChange={e => setStartH(e.target.value)} disabled={pending} className={`flex-1 ${selectClass}`}>
-                  <option value="">--</option>
-                  {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                </select>
-                <span className="text-brand-texto/40 text-sm">:</span>
-                <select value={startM} onChange={e => setStartM(e.target.value)} disabled={pending || !startH} className={`w-16 ${selectClass}`}>
-                  {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-
-                <span className="text-brand-texto/50 text-sm font-medium px-1">-</span>
-
-                {/* End */}
-                <select value={endH} onChange={e => setEndH(e.target.value)} disabled={pending} className={`flex-1 ${selectClass}`}>
-                  <option value="">--</option>
-                  {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                </select>
-                <span className="text-brand-texto/40 text-sm">:</span>
-                <select value={endM} onChange={e => setEndM(e.target.value)} disabled={pending || !endH} className={`w-16 ${selectClass}`}>
-                  {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-1 flex-1">
+                  <label className="text-xs font-medium text-brand-texto/60" htmlFor="menu-start">Desde</label>
+                  <input
+                    id="menu-start"
+                    type="text"
+                    inputMode="numeric"
+                    value={startTime}
+                    onChange={e => handleTimeChange(e, startTime, setStartTime)}
+                    placeholder="09:00"
+                    maxLength={5}
+                    disabled={pending}
+                    className={inputClass}
+                  />
+                </div>
+                <span className="text-brand-texto/40 text-sm mt-5">-</span>
+                <div className="flex flex-col gap-1 flex-1">
+                  <label className="text-xs font-medium text-brand-texto/60" htmlFor="menu-end">Hasta</label>
+                  <input
+                    id="menu-end"
+                    type="text"
+                    inputMode="numeric"
+                    value={endTime}
+                    onChange={e => handleTimeChange(e, endTime, setEndTime)}
+                    placeholder="12:00"
+                    maxLength={5}
+                    disabled={pending}
+                    className={inputClass}
+                  />
+                </div>
               </div>
 
-              {/* Mode hint */}
               {isAutomatic ? (
                 <p className="text-xs text-brand-principal font-medium">
                   Modo automático: activo de {startTime} a {endTime}
