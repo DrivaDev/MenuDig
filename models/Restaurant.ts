@@ -41,6 +41,20 @@ const RestaurantSchema = new Schema(
     menuLogoSize:        { type: String, enum: ['sm', 'md', 'lg'], default: 'md' },
     menuShowDescription: { type: Boolean, default: true },
 
+    // ── Hero image ──────────────────────────────────────────────────────────
+    heroImageUrl:      { type: String, default: '' },
+    heroImagePublicId: { type: String, default: '' },
+
+    // ── Social & contact ────────────────────────────────────────────────────
+    whatsappUrl:   { type: String, default: '' },
+    instagramUrl:  { type: String, default: '' },
+    facebookUrl:   { type: String, default: '' },
+    googleMapsUrl: { type: String, default: '' },
+
+    // ── WiFi ────────────────────────────────────────────────────────────────
+    wifiName:     { type: String, default: '' },
+    wifiPassword: { type: String, default: '' },
+
     // ── QR customization ────────────────────────────────────────────────────
     qrFgColor:     { type: String, default: '#1C1917' },
     qrBgColor:     { type: String, default: '#FFFFFF' },

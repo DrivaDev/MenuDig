@@ -83,26 +83,54 @@ export async function updateRestaurantProfile(prevState: any, formData: FormData
   const newLogoPublicId = formData.get('logoPublicId')?.toString() ?? ''
   const description     = formData.get('description')?.toString().trim() ?? ''
 
+  const newHeroImageUrl      = formData.get('heroImageUrl')?.toString() ?? ''
+  const newHeroImagePublicId = formData.get('heroImagePublicId')?.toString() ?? ''
+
+  const whatsappUrl   = formData.get('whatsappUrl')?.toString().trim() ?? ''
+  const instagramUrl  = formData.get('instagramUrl')?.toString().trim() ?? ''
+  const facebookUrl   = formData.get('facebookUrl')?.toString().trim() ?? ''
+  const googleMapsUrl = formData.get('googleMapsUrl')?.toString().trim() ?? ''
+  const wifiName      = formData.get('wifiName')?.toString().trim() ?? ''
+  const wifiPassword  = formData.get('wifiPassword')?.toString().trim() ?? ''
+
   await dbConnect()
   const restaurant = await Restaurant.findOne({ clerkId: userId })
   if (!restaurant) return { success: false, error: 'Restaurante no encontrado.' }
 
-  // If a new logo was uploaded and there was a previous one, delete the old asset
+  // Delete old logo from Cloudinary if replaced
   if (newLogoPublicId && restaurant.logoPublicId && newLogoPublicId !== restaurant.logoPublicId) {
-    try {
-      await cloudinaryDestroy(restaurant.logoPublicId)
-    } catch (err) {
+    try { await cloudinaryDestroy(restaurant.logoPublicId) } catch (err) {
       console.error('[Cloudinary logo delete failed]', err)
     }
   }
 
-  const update: Record<string, string> = { name, description }
+  // Delete old hero image from Cloudinary if replaced or cleared
+  if (
+    restaurant.heroImagePublicId &&
+    (formData.get('clearHeroImage') === 'true' ||
+      (newHeroImagePublicId && newHeroImagePublicId !== restaurant.heroImagePublicId))
+  ) {
+    try { await cloudinaryDestroy(restaurant.heroImagePublicId) } catch (err) {
+      console.error('[Cloudinary hero delete failed]', err)
+    }
+  }
+
+  const update: Record<string, string> = {
+    name, description,
+    whatsappUrl, instagramUrl, facebookUrl, googleMapsUrl,
+    wifiName, wifiPassword,
+  }
+
   if (newLogoUrl)      update.logoUrl      = newLogoUrl
   if (newLogoPublicId) update.logoPublicId = newLogoPublicId
-
   if (formData.get('clearLogo') === 'true') {
-    update.logoUrl      = ''
-    update.logoPublicId = ''
+    update.logoUrl = ''; update.logoPublicId = ''
+  }
+
+  if (newHeroImageUrl)      update.heroImageUrl      = newHeroImageUrl
+  if (newHeroImagePublicId) update.heroImagePublicId = newHeroImagePublicId
+  if (formData.get('clearHeroImage') === 'true') {
+    update.heroImageUrl = ''; update.heroImagePublicId = ''
   }
 
   await Restaurant.updateOne({ clerkId: userId }, { $set: update })

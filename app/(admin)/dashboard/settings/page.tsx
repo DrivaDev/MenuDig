@@ -18,6 +18,14 @@ export default async function SettingsPage() {
     logoUrl: string
     logoPublicId: string
     description: string
+    heroImageUrl: string
+    heroImagePublicId: string
+    whatsappUrl: string
+    instagramUrl: string
+    facebookUrl: string
+    googleMapsUrl: string
+    wifiName: string
+    wifiPassword: string
     menuColor: string
     menuBgColor: string
     menuTitleColor: string
@@ -47,6 +55,14 @@ export default async function SettingsPage() {
             initialLogoUrl={restaurant.logoUrl ?? ''}
             initialLogoPublicId={restaurant.logoPublicId ?? ''}
             initialDescription={restaurant.description ?? ''}
+            initialHeroImageUrl={restaurant.heroImageUrl ?? ''}
+            initialHeroImagePublicId={restaurant.heroImagePublicId ?? ''}
+            initialWhatsappUrl={restaurant.whatsappUrl ?? ''}
+            initialInstagramUrl={restaurant.instagramUrl ?? ''}
+            initialFacebookUrl={restaurant.facebookUrl ?? ''}
+            initialGoogleMapsUrl={restaurant.googleMapsUrl ?? ''}
+            initialWifiName={restaurant.wifiName ?? ''}
+            initialWifiPassword={restaurant.wifiPassword ?? ''}
           />
         </div>
 
