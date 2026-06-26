@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useActionState } from 'react'
+import { useState, useEffect, useActionState, useRef } from 'react'
 import { Loader2, X } from 'lucide-react'
 import { updateRestaurantProfile } from '@/actions/restaurant'
+import ImageCropModal from '@/components/ui/ImageCropModal'
 
 interface Props {
   initialName: string
@@ -21,13 +22,13 @@ interface Props {
 
 const initialState = { success: false as boolean, error: undefined as string | undefined }
 
-async function uploadToCloudinary(file: File): Promise<{ secure_url: string; public_id: string }> {
+async function uploadToCloudinary(file: Blob | File): Promise<{ secure_url: string; public_id: string }> {
   const signRes = await fetch('/api/sign-cloudinary-params', { method: 'POST' })
   if (!signRes.ok) throw new Error('sign-failed')
   const { signature, timestamp, api_key, cloud_name } = await signRes.json()
 
   const body = new FormData()
-  body.append('file', file)
+  body.append('file', file, 'image.jpg')
   body.append('api_key', api_key)
   body.append('timestamp', String(timestamp))
   body.append('signature', signature)
@@ -35,45 +36,63 @@ async function uploadToCloudinary(file: File): Promise<{ secure_url: string; pub
 
   const uploadRes = await fetch(
     `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
-    { method: 'POST', body }
+    { method: 'POST', body },
   )
   if (!uploadRes.ok) throw new Error('upload-failed')
   return uploadRes.json()
 }
 
-function ImageUploadField({
-  label,
-  hint,
-  imageUrl,
-  onImageChange,
-  onRemove,
-  disabled,
-}: {
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+function validateImageFile(file: File): string | null {
+  if (file.size > 5 * 1024 * 1024) return 'La imagen supera el límite de 5 MB.'
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return 'Formato no permitido. Usá JPG, PNG o WebP.'
+  return null
+}
+
+interface CropUploadFieldProps {
   label: string
   hint: string
+  aspectRatio: number
   imageUrl: string
+  previewVariant: 'circle' | 'banner'
   onImageChange: (url: string, publicId: string) => void
   onRemove: () => void
   disabled: boolean
-}) {
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
+}
+
+function CropUploadField({
+  label, hint, aspectRatio, imageUrl, previewVariant, onImageChange, onRemove, disabled,
+}: CropUploadFieldProps) {
+  const inputRef                                      = useRef<HTMLInputElement>(null)
+  const [pendingSrc, setPendingSrc]                   = useState<string | null>(null)
+  const [isUploading, setIsUploading]                 = useState(false)
+  const [uploadError, setUploadError]                 = useState<string | null>(null)
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('La imagen supera el límite de 5 MB.')
-      return
-    }
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setUploadError('Formato no permitido. Usá JPG, PNG o WebP.')
-      return
-    }
-    setIsUploading(true)
+    const err = validateImageFile(file)
+    if (err) { setUploadError(err); return }
     setUploadError(null)
+    const dataUrl = await readFileAsDataUrl(file)
+    setPendingSrc(dataUrl)
+    // reset input so same file can be re-selected
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  async function handleCropConfirm(blob: Blob) {
+    setIsUploading(true)
+    setPendingSrc(null)
     try {
-      const data = await uploadToCloudinary(file)
+      const data = await uploadToCloudinary(blob)
       onImageChange(data.secure_url, data.public_id)
     } catch {
       setUploadError('No pudimos subir la imagen. Verificá tu conexión e intentá de nuevo.')
@@ -83,41 +102,56 @@ function ImageUploadField({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium text-brand-texto">{label}</span>
-      {imageUrl && (
-        <div className="relative w-full h-32 rounded-lg overflow-hidden border border-brand-acento bg-brand-fondo">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt="Vista previa" className="w-full h-full object-cover" />
-          <button
-            type="button"
-            onClick={onRemove}
-            disabled={disabled}
-            aria-label="Eliminar imagen"
-            className="absolute top-2 right-2 flex items-center justify-center w-6 h-6 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-brand-danger/10 hover:border-brand-danger/50 transition-colors duration-100 disabled:opacity-50"
-          >
-            <X size={12} className="text-brand-texto" />
-          </button>
-        </div>
+    <>
+      {pendingSrc && (
+        <ImageCropModal
+          imageSrc={pendingSrc}
+          aspectRatio={aspectRatio}
+          onConfirm={handleCropConfirm}
+          onCancel={() => setPendingSrc(null)}
+        />
       )}
-      <input
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={handleFileChange}
-        disabled={isUploading || disabled}
-        className="block w-full text-sm text-brand-texto file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-brand-acento file:text-sm file:font-medium file:text-brand-titulares file:bg-brand-fondo file:cursor-pointer hover:file:bg-brand-acento/40 transition-colors duration-100 disabled:opacity-50"
-      />
-      <p className="text-xs font-light text-brand-texto">{hint}</p>
-      {isUploading && (
-        <div className="flex items-center gap-2 text-xs text-brand-texto">
-          <Loader2 size={12} className="animate-spin text-brand-principal" />
-          Subiendo imagen...
-        </div>
-      )}
-      {uploadError && (
-        <p className="text-xs text-brand-danger" role="alert">{uploadError}</p>
-      )}
-    </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-brand-texto">{label}</span>
+
+        {imageUrl && (
+          <div className={`relative overflow-hidden border border-brand-acento bg-brand-fondo ${previewVariant === 'circle' ? 'w-24 h-24 rounded-full' : 'w-full h-32 rounded-lg'}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt="Vista previa" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={disabled}
+              aria-label="Eliminar imagen"
+              className="absolute top-1.5 right-1.5 flex items-center justify-center w-6 h-6 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-red-50 hover:border-red-300 transition-colors disabled:opacity-50"
+            >
+              <X size={10} className="text-brand-texto" />
+            </button>
+          </div>
+        )}
+
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileChange}
+          disabled={isUploading || disabled}
+          className="block w-full text-sm text-brand-texto file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-brand-acento file:text-sm file:font-medium file:text-brand-titulares file:bg-brand-fondo file:cursor-pointer hover:file:bg-brand-acento/40 transition-colors duration-100 disabled:opacity-50"
+        />
+        <p className="text-xs font-light text-brand-texto">{hint}</p>
+
+        {isUploading && (
+          <div className="flex items-center gap-2 text-xs text-brand-texto">
+            <Loader2 size={12} className="animate-spin text-brand-principal" />
+            Subiendo imagen...
+          </div>
+        )}
+        {uploadError && (
+          <p className="text-xs text-red-500" role="alert">{uploadError}</p>
+        )}
+      </div>
+    </>
   )
 }
 
@@ -161,17 +195,17 @@ export default function RestaurantProfileForm({
   return (
     <form action={formAction} className="flex flex-col gap-5">
       {/* Hidden image fields */}
-      <input type="hidden" name="logoUrl"            value={logoUrl} />
-      <input type="hidden" name="logoPublicId"       value={logoPublicId} />
-      <input type="hidden" name="clearLogo"          value={clearLogo ? 'true' : 'false'} />
-      <input type="hidden" name="heroImageUrl"       value={heroImageUrl} />
-      <input type="hidden" name="heroImagePublicId"  value={heroImagePublicId} />
-      <input type="hidden" name="clearHeroImage"     value={clearHeroImage ? 'true' : 'false'} />
+      <input type="hidden" name="logoUrl"           value={logoUrl} />
+      <input type="hidden" name="logoPublicId"      value={logoPublicId} />
+      <input type="hidden" name="clearLogo"         value={clearLogo ? 'true' : 'false'} />
+      <input type="hidden" name="heroImageUrl"      value={heroImageUrl} />
+      <input type="hidden" name="heroImagePublicId" value={heroImagePublicId} />
+      <input type="hidden" name="clearHeroImage"    value={clearHeroImage ? 'true' : 'false'} />
 
       {/* Restaurant name */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-brand-texto" htmlFor="restaurant-name">
-          Nombre del restaurante <span className="text-brand-danger">*</span>
+          Nombre del restaurante <span className="text-red-500">*</span>
         </label>
         <input
           id="restaurant-name"
@@ -184,49 +218,25 @@ export default function RestaurantProfileForm({
         />
       </div>
 
-      {/* Logo upload */}
-      <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-brand-texto">Logo del restaurante</span>
-        {logoUrl && (
-          <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-brand-acento bg-brand-fondo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logoUrl} alt="Logo actual" className="w-full h-full object-contain p-1" />
-            <button
-              type="button"
-              onClick={() => { setLogoUrl(''); setLogoPublicId(''); setClearLogo(true) }}
-              disabled={pending}
-              aria-label="Eliminar logo"
-              className="absolute top-1 right-1 flex items-center justify-center w-5 h-5 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-brand-danger/10 hover:border-brand-danger/50 transition-colors duration-100 disabled:opacity-50"
-            >
-              <X size={10} className="text-brand-texto" />
-            </button>
-          </div>
-        )}
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={async (e) => {
-            const file = e.target.files?.[0]
-            if (!file) return
-            if (file.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return
-            try {
-              const data = await uploadToCloudinary(file)
-              setLogoUrl(data.secure_url)
-              setLogoPublicId(data.public_id)
-              setClearLogo(false)
-            } catch { /* handled inline */ }
-          }}
-          disabled={pending}
-          className="block w-full text-sm text-brand-texto file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-brand-acento file:text-sm file:font-medium file:text-brand-titulares file:bg-brand-fondo file:cursor-pointer hover:file:bg-brand-acento/40 transition-colors duration-100 disabled:opacity-50"
-        />
-        <p className="text-xs font-light text-brand-texto">JPG, PNG o WebP. Máximo 5 MB. Se mostrará como logo en tu menú.</p>
-      </div>
+      {/* Logo */}
+      <CropUploadField
+        label="Logo del restaurante"
+        hint="JPG, PNG o WebP · Máx 5 MB · Se mostrará como logo circular en tu menú."
+        aspectRatio={1}
+        imageUrl={logoUrl}
+        previewVariant="circle"
+        onImageChange={(url, pid) => { setLogoUrl(url); setLogoPublicId(pid); setClearLogo(false) }}
+        onRemove={() => { setLogoUrl(''); setLogoPublicId(''); setClearLogo(true) }}
+        disabled={pending}
+      />
 
-      {/* Hero image upload */}
-      <ImageUploadField
+      {/* Hero image */}
+      <CropUploadField
         label="Imagen de portada (hero)"
-        hint="JPG, PNG o WebP. Máximo 5 MB. Se muestra como banner en la parte superior del menú."
+        hint="JPG, PNG o WebP · Máx 5 MB · Se muestra como banner en la parte superior del menú."
+        aspectRatio={16 / 9}
         imageUrl={heroImageUrl}
+        previewVariant="banner"
         onImageChange={(url, pid) => { setHeroImageUrl(url); setHeroImagePublicId(pid); setClearHeroImage(false) }}
         onRemove={() => { setHeroImageUrl(''); setHeroImagePublicId(''); setClearHeroImage(true) }}
         disabled={pending}
@@ -235,7 +245,7 @@ export default function RestaurantProfileForm({
       {/* Description */}
       <div className="flex flex-col gap-2">
         <label className="text-sm font-normal text-brand-texto" htmlFor="restaurant-description">
-          Descripción <span className="text-sm font-normal text-brand-texto">(opcional)</span>
+          Descripción <span className="text-sm text-brand-texto/60">(opcional)</span>
         </label>
         <textarea
           id="restaurant-description"
@@ -253,83 +263,30 @@ export default function RestaurantProfileForm({
       {/* Social links */}
       <div className="flex flex-col gap-3">
         <span className="text-sm font-medium text-brand-texto">Redes sociales y contacto</span>
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-brand-texto" htmlFor="whatsapp-url">WhatsApp</label>
-          <input
-            id="whatsapp-url"
-            type="url"
-            name="whatsappUrl"
-            defaultValue={initialWhatsappUrl}
-            placeholder="https://wa.me/5491112345678"
-            disabled={pending}
-            className={inputClass}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-brand-texto" htmlFor="instagram-url">Instagram</label>
-          <input
-            id="instagram-url"
-            type="url"
-            name="instagramUrl"
-            defaultValue={initialInstagramUrl}
-            placeholder="https://instagram.com/turestaurante"
-            disabled={pending}
-            className={inputClass}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-brand-texto" htmlFor="facebook-url">Facebook</label>
-          <input
-            id="facebook-url"
-            type="url"
-            name="facebookUrl"
-            defaultValue={initialFacebookUrl}
-            placeholder="https://facebook.com/turestaurante"
-            disabled={pending}
-            className={inputClass}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-brand-texto" htmlFor="maps-url">Google Maps</label>
-          <input
-            id="maps-url"
-            type="url"
-            name="googleMapsUrl"
-            defaultValue={initialGoogleMapsUrl}
-            placeholder="https://maps.google.com/..."
-            disabled={pending}
-            className={inputClass}
-          />
-        </div>
+        {[
+          { id: 'whatsapp-url',  name: 'whatsappUrl',   label: 'WhatsApp',    placeholder: 'https://wa.me/5491112345678',         defaultValue: initialWhatsappUrl  },
+          { id: 'instagram-url', name: 'instagramUrl',  label: 'Instagram',   placeholder: 'https://instagram.com/turestaurante', defaultValue: initialInstagramUrl },
+          { id: 'facebook-url',  name: 'facebookUrl',   label: 'Facebook',    placeholder: 'https://facebook.com/turestaurante',  defaultValue: initialFacebookUrl  },
+          { id: 'maps-url',      name: 'googleMapsUrl', label: 'Google Maps', placeholder: 'https://maps.google.com/...',          defaultValue: initialGoogleMapsUrl },
+        ].map(f => (
+          <div key={f.id} className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-brand-texto" htmlFor={f.id}>{f.label}</label>
+            <input id={f.id} type="url" name={f.name} defaultValue={f.defaultValue} placeholder={f.placeholder} disabled={pending} className={inputClass} />
+          </div>
+        ))}
       </div>
 
       {/* WiFi */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-brand-texto">WiFi</span>
         <div className="flex gap-3">
-          <div className="flex flex-col gap-2 flex-1">
+          <div className="flex flex-col gap-1.5 flex-1">
             <label className="text-xs font-medium text-brand-texto" htmlFor="wifi-name">Red</label>
-            <input
-              id="wifi-name"
-              type="text"
-              name="wifiName"
-              defaultValue={initialWifiName}
-              placeholder="Nombre de la red"
-              disabled={pending}
-              className={inputClass}
-            />
+            <input id="wifi-name" type="text" name="wifiName" defaultValue={initialWifiName} placeholder="Nombre de la red" disabled={pending} className={inputClass} />
           </div>
-          <div className="flex flex-col gap-2 flex-1">
+          <div className="flex flex-col gap-1.5 flex-1">
             <label className="text-xs font-medium text-brand-texto" htmlFor="wifi-password">Contraseña</label>
-            <input
-              id="wifi-password"
-              type="text"
-              name="wifiPassword"
-              defaultValue={initialWifiPassword}
-              placeholder="Contraseña"
-              disabled={pending}
-              className={inputClass}
-            />
+            <input id="wifi-password" type="text" name="wifiPassword" defaultValue={initialWifiPassword} placeholder="Contraseña" disabled={pending} className={inputClass} />
           </div>
         </div>
         <p className="text-xs font-light text-brand-texto">Si completás ambos campos, se mostrará en el menú.</p>
@@ -342,8 +299,8 @@ export default function RestaurantProfileForm({
         </div>
       )}
       {state.error && !state.success && (
-        <div className="rounded-md bg-brand-danger/10 border border-brand-danger/30 px-4 py-3">
-          <p className="text-sm font-medium text-brand-danger" role="alert">{state.error}</p>
+        <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3">
+          <p className="text-sm font-medium text-red-600" role="alert">{state.error}</p>
         </div>
       )}
 
