@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { UserButton, useUser } from '@clerk/nextjs'
 import {
   LayoutDashboard,
+  BookOpen,
   Tag,
   UtensilsCrossed,
   QrCode,
@@ -85,6 +86,11 @@ export default function Sidebar({
       label: 'Dashboard',
       href: '/dashboard',
       icon: <LayoutDashboard size={16} />,
+    },
+    {
+      label: 'Menús',
+      href: '/dashboard/menus',
+      icon: <BookOpen size={16} />,
     },
     {
       label: 'Categorías',

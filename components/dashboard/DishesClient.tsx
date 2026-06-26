@@ -40,6 +40,11 @@ interface Category {
   order: number
 }
 
+interface MenuOption {
+  _id: string
+  name: string
+}
+
 interface Dish {
   _id: string
   name: string
@@ -52,6 +57,7 @@ interface Dish {
   allergens: string[]
   tags?: string[]
   subcategoryId?: string | null
+  menuIds?: string[]
   order: number
 }
 
@@ -179,9 +185,10 @@ interface Props {
   dishes: Dish[]
   categories: Category[]
   subcategoriesByCategory: Record<string, SubcategoryItem[]>
+  menus?: MenuOption[]
 }
 
-export default function DishesClient({ dishes: initialDishes, categories, subcategoriesByCategory }: Props) {
+export default function DishesClient({ dishes: initialDishes, categories, subcategoriesByCategory, menus = [] }: Props) {
   const router = useRouter()
 
   // Flat lookup: subcategoryId → name
@@ -432,6 +439,7 @@ export default function DishesClient({ dishes: initialDishes, categories, subcat
           dish={editTarget}
           categories={categories}
           subcategoriesByCategory={subcategoriesByCategory}
+          menus={menus}
           onClose={() => { setModalOpen(false); setEditTarget(null) }}
           onSuccess={handleModalSuccess}
           onError={(msg) => showToast('error', msg)}

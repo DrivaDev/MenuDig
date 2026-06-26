@@ -5,9 +5,11 @@ import { Restaurant } from '@/models/Restaurant'
 import { Category } from '@/models/Category'
 import { Dish } from '@/models/Dish'
 import { Subcategory } from '@/models/Subcategory'
+import { Menu } from '@/models/Menu'
 import DishesClient from '@/components/dashboard/DishesClient'
 
 interface SubcategoryLean { _id: string; categoryId: string; name: string }
+interface MenuLean { _id: string; name: string }
 
 export default async function DishesPage() {
   const { userId } = await auth()
@@ -20,10 +22,11 @@ export default async function DishesPage() {
   }>()
   if (!restaurant) redirect('/dashboard')
 
-  const [categories, dishes, subcategories] = await Promise.all([
+  const [categories, dishes, subcategories, menus] = await Promise.all([
     Category.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean(),
     Dish.find({ restaurantId: restaurant._id }).sort({ order: 1, createdAt: 1 }).lean(),
     Subcategory.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean<SubcategoryLean[]>(),
+    Menu.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean<MenuLean[]>(),
   ])
 
   const subcatsByCategory: Record<string, { _id: string; name: string }[]> = {}
@@ -38,6 +41,7 @@ export default async function DishesPage() {
       dishes={JSON.parse(JSON.stringify(dishes))}
       categories={JSON.parse(JSON.stringify(categories))}
       subcategoriesByCategory={subcatsByCategory}
+      menus={JSON.parse(JSON.stringify(menus))}
     />
   )
 }

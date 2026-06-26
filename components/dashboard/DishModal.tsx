@@ -9,11 +9,12 @@ import { TAGS } from '@/lib/tags'
 
 interface Category { _id: string; name: string }
 interface SubcategoryItem { _id: string; name: string }
+interface MenuOption { _id: string; name: string }
 interface Dish {
   _id: string; name: string; description: string; price: number;
   available: boolean; imageUrl: string; imagePublicId: string;
   categoryId?: string; allergens: string[]; tags?: string[];
-  subcategoryId?: string | null
+  subcategoryId?: string | null; menuIds?: string[]
 }
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
   dish: Dish | null
   categories: Category[]
   subcategoriesByCategory: Record<string, SubcategoryItem[]>
+  menus?: MenuOption[]
   onClose: () => void
   onSuccess: (message: string) => void
   onError: (message: string) => void
@@ -28,7 +30,7 @@ interface Props {
 
 const initialState = { success: false as boolean, error: undefined as string | undefined }
 
-export default function DishModal({ mode, dish, categories, subcategoriesByCategory, onClose, onSuccess, onError }: Props) {
+export default function DishModal({ mode, dish, categories, subcategoriesByCategory, menus = [], onClose, onSuccess, onError }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const action = mode === 'edit' ? updateDish : createDish
   const [state, formAction, pending] = useActionState(action, initialState)
@@ -42,6 +44,7 @@ export default function DishModal({ mode, dish, categories, subcategoriesByCateg
   const [tags, setTags]                 = useState<string[]>(dish?.tags ?? [])
   const [subcategoryId, setSubcategoryId] = useState(dish?.subcategoryId ?? '')
   const [available, setAvailable]       = useState(dish?.available ?? true)
+  const [selectedMenuIds, setSelectedMenuIds] = useState<string[]>(dish?.menuIds ?? [])
 
   // ── Image upload state — managed separately from form (client-side upload) ──
   const [imageUrl, setImageUrl]           = useState(dish?.imageUrl ?? '')
@@ -68,6 +71,10 @@ export default function DishModal({ mode, dish, categories, subcategoriesByCateg
 
   function toggleTag(key: string) {
     setTags(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+  }
+
+  function toggleMenuId(id: string) {
+    setSelectedMenuIds(prev => prev.includes(id) ? prev.filter(k => k !== id) : [...prev, id])
   }
 
   const currentSubcats = subcategoriesByCategory[categoryId] ?? []
@@ -275,6 +282,36 @@ export default function DishModal({ mode, dish, categories, subcategoriesByCateg
                 <p className="text-xs text-brand-danger" role="alert">{uploadError}</p>
               )}
             </div>
+
+            {/* Menus — only shown when restaurant has menus configured */}
+            {menus.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-brand-texto">Menús</span>
+                <div className="flex flex-col gap-2">
+                  {menus.map(m => (
+                    <label
+                      key={m._id}
+                      className="flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 cursor-pointer hover:bg-brand-fondo transition-colors duration-100 has-[:checked]:border-brand-acento has-[:checked]:bg-brand-acento/30"
+                    >
+                      <input
+                        type="checkbox"
+                        name="menuIds"
+                        value={m._id}
+                        checked={selectedMenuIds.includes(m._id)}
+                        onChange={() => toggleMenuId(m._id)}
+                        className="w-4 h-4 accent-brand-principal"
+                      />
+                      <span className="text-sm font-normal text-brand-texto">{m.name}</span>
+                    </label>
+                  ))}
+                </div>
+                {menus.length > 0 && selectedMenuIds.length === 0 && (
+                  <p className="text-xs text-brand-danger">
+                    Sin menús asignados — este plato no aparecerá en ningún menú.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Allergen grid */}
             <div className="flex flex-col gap-2">

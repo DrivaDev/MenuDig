@@ -6,8 +6,8 @@ import { Restaurant as RestaurantModel } from '@/models/Restaurant'
 import { Category as CategoryModel } from '@/models/Category'
 import { Dish as DishModel } from '@/models/Dish'
 import { Subcategory as SubcategoryModel } from '@/models/Subcategory'
-import { MenuCategoryNav } from '@/components/menu/MenuCategoryNav'
-import { DishRow } from '@/components/menu/DishRow'
+import { Menu as MenuModel } from '@/models/Menu'
+import MenuDishesView from '@/components/menu/MenuDishesView'
 
 // On-demand ISR — no revalidate interval (per D-14)
 // Revalidation happens via revalidatePath('/menu/' + slug) called by all mutating server actions.
@@ -53,6 +53,13 @@ interface SubcategoryData {
   order: number
 }
 
+interface MenuData {
+  _id: string
+  startTime: string | null
+  endTime: string | null
+  isActive: boolean
+}
+
 interface DishData {
   _id: string
   categoryId: string
@@ -63,6 +70,7 @@ interface DishData {
   imageUrl: string
   allergens: string[]
   tags?: string[]
+  menuIds?: string[]
 }
 
 export async function generateMetadata({
@@ -123,10 +131,11 @@ export default async function MenuPage({
   const restaurant = await RestaurantModel.findOne({ slug }).lean<RestaurantData>()
   if (!restaurant) notFound()
 
-  const [categories, dishes, subcategories] = await Promise.all([
+  const [categories, dishes, subcategories, menus] = await Promise.all([
     CategoryModel.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean<CategoryData[]>(),
     DishModel.find({ restaurantId: restaurant._id, available: true }).sort({ order: 1, createdAt: 1 }).lean<DishData[]>(),
     SubcategoryModel.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean<SubcategoryData[]>(),
+    MenuModel.find({ restaurantId: restaurant._id }).sort({ order: 1 }).lean<MenuData[]>(),
   ])
 
   // Group dishes by categoryId — server-side, no client round-trip (per D-16)
@@ -150,6 +159,7 @@ export default async function MenuPage({
   const serializedDishesByCategory: Record<string, DishData[]> = JSON.parse(JSON.stringify(dishesByCategory))
   const serializedSubcatsByCategory: Record<string, SubcategoryData[]> = JSON.parse(JSON.stringify(subcatsByCategory))
   const serializedRestaurant: RestaurantData = JSON.parse(JSON.stringify(restaurant))
+  const serializedMenus: MenuData[] = JSON.parse(JSON.stringify(menus))
 
   // Build theme CSS — overrides brand tokens so all Tailwind brand classes reflect custom palette
   const menuColor      = serializedRestaurant.menuColor      || '#EA580C'
@@ -167,8 +177,8 @@ export default async function MenuPage({
   const logoSizePx:    Record<string, number> = { sm: 56, md: 80, lg: 112 }
   const headerAlign = logoPosition === 'center' ? 'items-center text-center' : 'items-start'
 
-  // Filter out categories with no available dishes
-  const populatedCategories = serializedCategories.filter(
+  // All categories with at least one available dish (used for JSON-LD only)
+  const allPopulatedCategories = serializedCategories.filter(
     cat => (serializedDishesByCategory[cat._id] ?? []).length > 0
   )
 
@@ -182,7 +192,7 @@ export default async function MenuPage({
     hasMenu: {
       '@type': 'Menu',
       name: `Menú de ${serializedRestaurant.name}`,
-      hasMenuSection: populatedCategories.map(cat => ({
+      hasMenuSection: allPopulatedCategories.map(cat => ({
         '@type': 'MenuSection',
         name: cat.name,
         hasMenuItem: (serializedDishesByCategory[cat._id] ?? []).map(dish => ({
@@ -345,81 +355,14 @@ export default async function MenuPage({
           )}
         </header>
 
-        {/* Sticky category tab bar — client island (only 'use client' component on page) */}
-        {populatedCategories.length > 0 && (
-          <MenuCategoryNav
-            categories={populatedCategories.map(c => ({ _id: c._id, name: c.name }))}
-            menuColor={serializedRestaurant.menuColor ?? '#EA580C'}
-          />
-        )}
-
-        {/* Category sections */}
-        <main>
-          {populatedCategories.length === 0 ? (
-            <div className="px-4 py-12 text-center">
-              <p className="text-base font-normal text-brand-texto">Sin categorías disponibles</p>
-              <p className="text-sm font-normal text-brand-texto mt-2">
-                Este restaurante aún no ha publicado su menú.
-              </p>
-            </div>
-          ) : (
-            populatedCategories.map(cat => {
-              const catDishes  = serializedDishesByCategory[cat._id] ?? []
-              const catSubcats = serializedSubcatsByCategory[cat._id] ?? []
-              const hasSubcats = catSubcats.length > 0
-
-              const noSubcatDishes = hasSubcats
-                ? catDishes.filter(d => !d.subcategoryId)
-                : catDishes
-
-              const dishesBySubcat: Record<string, DishData[]> = {}
-              if (hasSubcats) {
-                for (const sub of catSubcats) {
-                  dishesBySubcat[sub._id] = catDishes.filter(
-                    d => d.subcategoryId && String(d.subcategoryId) === sub._id
-                  )
-                }
-              }
-
-              return (
-                <section
-                  key={cat._id}
-                  id={`category-${cat._id}`}
-                  className="scroll-mt-12"
-                >
-                  <div className="px-4 py-3 bg-brand-fondo border-b border-gray-100">
-                    <h2 className="text-lg font-bold text-brand-titulares leading-tight">
-                      {cat.name}
-                    </h2>
-                  </div>
-
-                  {/* Dishes without a subcategory */}
-                  {noSubcatDishes.map(dish => (
-                    <DishRow key={dish._id} dish={dish} />
-                  ))}
-
-                  {/* Subcategory groups */}
-                  {hasSubcats && catSubcats.map(sub => {
-                    const subDishes = dishesBySubcat[sub._id] ?? []
-                    if (subDishes.length === 0) return null
-                    return (
-                      <div key={sub._id}>
-                        <div className="px-4 py-2 bg-brand-fondo/60 border-b border-gray-100">
-                          <h3 className="text-sm font-medium text-brand-titulares/70 uppercase tracking-wide">
-                            {sub.name}
-                          </h3>
-                        </div>
-                        {subDishes.map(dish => (
-                          <DishRow key={dish._id} dish={dish} />
-                        ))}
-                      </div>
-                    )
-                  })}
-                </section>
-              )
-            })
-          )}
-        </main>
+        {/* Dish display — client island handles active menu filtering + minute-level switching */}
+        <MenuDishesView
+          menus={serializedMenus}
+          categories={serializedCategories}
+          subcategoriesByCategory={serializedSubcatsByCategory}
+          dishesByCategory={serializedDishesByCategory}
+          menuColor={menuColor}
+        />
 
         {/* Footer */}
         <footer className="mt-8 pb-16 px-4 text-center border-t border-gray-100">

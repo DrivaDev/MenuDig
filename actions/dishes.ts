@@ -55,6 +55,7 @@ export async function createDish(prevState: any, formData: FormData) {
   const tags            = formData.getAll('tags').map(String)
   const available       = formData.get('available') === 'true'
   const subcategoryIdRaw = formData.get('subcategoryId')?.toString() || null
+  const menuIds         = formData.getAll('menuIds').map(String).filter(Boolean)
 
   await dbConnect()
   const restaurant = await Restaurant.findOne({ clerkId: userId }).lean<{ _id: string; slug: string }>()
@@ -92,6 +93,7 @@ export async function createDish(prevState: any, formData: FormData) {
     allergens,
     tags,
     available,
+    menuIds,
     order: (maxOrderDoc?.order ?? -1) + 1,
   })
 
@@ -123,6 +125,7 @@ export async function updateDish(prevState: any, formData: FormData) {
   const tags            = formData.getAll('tags').map(String)
   const available       = formData.get('available') === 'true'
   const subcategoryIdRaw = formData.get('subcategoryId')?.toString() || null
+  const menuIds         = formData.getAll('menuIds').map(String).filter(Boolean)
 
   await dbConnect()
   const restaurant = await Restaurant.findOne({ clerkId: userId }).lean<{ _id: string; slug: string }>()
@@ -147,7 +150,7 @@ export async function updateDish(prevState: any, formData: FormData) {
 
   await Dish.updateOne(
     { _id: dishId, restaurantId: restaurant._id },
-    { $set: { name, description, price, categoryId, subcategoryId, imageUrl, imagePublicId, allergens, tags, available } }
+    { $set: { name, description, price, categoryId, subcategoryId, imageUrl, imagePublicId, allergens, tags, available, menuIds } }
   )
 
   revalidatePath('/menu/' + restaurant.slug)

@@ -13,6 +13,7 @@ const DishSchema = new Schema(
     allergens:     { type: [String], default: [] },
     tags:          { type: [String], default: [] },
     subcategoryId: { type: Schema.Types.ObjectId, ref: 'Subcategory', default: null },
+    menuIds:       { type: [Schema.Types.ObjectId], ref: 'Menu', default: [] },
     order:         { type: Number, default: 0 },
   },
   { timestamps: true }
