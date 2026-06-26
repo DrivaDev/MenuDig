@@ -4,7 +4,7 @@ import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
 import { Check, AlertTriangle, Clock, CreditCard, XCircle } from 'lucide-react'
 import { CancelSubscriptionForm } from '@/components/dashboard/CancelSubscriptionForm'
-import { RedeemCodeForm } from '@/components/dashboard/RedeemCodeForm'
+import { SubscribeModal } from '@/components/dashboard/SubscribeModal'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -183,17 +183,7 @@ export default async function SuscripcionPage({
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
-          {canSubscribe && (
-            /* POST form → API route → MP checkout redirect */
-            <form action="/api/subscription/create" method="POST">
-              <button
-                type="submit"
-                className="w-full bg-brand-principal text-white text-sm font-semibold rounded-lg px-6 py-3 min-h-[44px] hover:bg-[#C2410C] focus:outline-none focus:ring-2 focus:ring-brand-principal focus:ring-offset-2 transition-colors"
-              >
-                Suscribirme — $20.000/mes
-              </button>
-            </form>
-          )}
+          {canSubscribe && <SubscribeModal />}
 
           {isActive && <CancelSubscriptionForm />}
         </div>
@@ -209,8 +199,6 @@ export default async function SuscripcionPage({
         </p>
       </div>
 
-      {/* Promo code */}
-      <RedeemCodeForm />
     </div>
   )
 }
