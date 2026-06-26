@@ -80,7 +80,7 @@ export function SubscribeModal() {
     })
   }
 
-  const hasDiscount = applied?.success && !applied.is_free
+  const hasDiscount = applied?.success
   const showConfirm = applied?.success && applied.is_free
   const discountedPrice = calcPrice(applied?.discount_type, applied?.value)
 
