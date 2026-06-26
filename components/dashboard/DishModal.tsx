@@ -283,8 +283,8 @@ export default function DishModal({ mode, dish, categories, subcategoriesByCateg
               )}
             </div>
 
-            {/* Menus — only shown when restaurant has menus configured */}
-            {menus.length > 0 && (
+            {/* Menus — only shown when restaurant has 2+ menus (multi-menu mode active) */}
+            {menus.length >= 2 && (
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-medium text-brand-texto">Menús</span>
                 <div className="flex flex-col gap-2">

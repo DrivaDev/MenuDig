@@ -11,17 +11,23 @@ function timeToMinutes(t: string): number {
 }
 
 /**
- * Returns the active menu ID for the current Argentina time (UTC-3).
+ * Returns the active menu ID for the current Argentina time (UTC-3), or null
+ * when filtering should not apply (caller shows all dishes).
+ *
  * Rules:
- *  - No menus → null (caller shows all dishes)
- *  - All menus lack times → manual mode: return the isActive one
+ *  - 0 menus → null
+ *  - 1 menu with no times → null (standard/default menu, show everything)
+ *  - All menus lack times (2+) → manual mode: return the isActive one
  *  - Any menu has times → timed mode:
  *      1. Return menu whose range contains current time
  *      2. No match → return the most recently ended menu (today)
- *      3. Before any menu today → return the menu with the latest endTime (yesterday's last)
+ *      3. Before any menu today → return menu with the latest endTime (yesterday's last)
  */
 export function getActiveMenuId(menus: MenuData[]): string | null {
   if (menus.length === 0) return null
+
+  // Single menu with no time config = default "Estándar" mode → no filtering
+  if (menus.length === 1 && !menus[0].startTime && !menus[0].endTime) return null
 
   const timedMenus = menus.filter(m => m.startTime && m.endTime)
 

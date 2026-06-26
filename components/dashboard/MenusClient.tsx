@@ -93,8 +93,16 @@ export default function MenusClient({ menus: initialMenus }: Props) {
 
       {/* Info */}
       <div className="text-sm font-normal text-brand-texto bg-brand-acento/30 border border-brand-acento rounded-lg px-4 py-3 space-y-1">
-        <p>Creá hasta 4 menús. Cada plato puede pertenecer a uno o más menús.</p>
-        <p>Con horarios → el menú activo cambia automáticamente. Sin horarios → activás manualmente uno a la vez.</p>
+        {menus.length <= 1 ? (
+          <p>
+            Tu menú <strong>Estándar</strong> muestra todos los platos disponibles. Creá un segundo menú para activar el sistema de múltiples menús con horarios o activación manual.
+          </p>
+        ) : (
+          <>
+            <p>Creá hasta 4 menús. Cada plato puede pertenecer a uno o más menús.</p>
+            <p>Con horarios → el menú activo cambia automáticamente. Sin horarios → activás manualmente uno a la vez.</p>
+          </>
+        )}
       </div>
 
       {/* Limit warning */}
@@ -160,8 +168,8 @@ export default function MenusClient({ menus: initialMenus }: Props) {
                   )}
                 </div>
 
-                {/* Manual toggle — only when all menus are manual */}
-                {isManualMode && (
+                {/* Manual toggle — only when 2+ menus and all are manual */}
+                {menus.length > 1 && isManualMode && (
                   <button
                     onClick={() => handleToggleActive(m._id)}
                     aria-label={m.isActive ? 'Desactivar' : 'Activar'}
@@ -192,13 +200,15 @@ export default function MenusClient({ menus: initialMenus }: Props) {
                     >
                       <Pencil size={13} />
                     </button>
-                    <button
-                      onClick={() => setConfirmDeleteId(m._id)}
-                      aria-label="Eliminar menú"
-                      className="flex items-center justify-center w-8 h-8 rounded-md border border-brand-danger/30 bg-white text-brand-danger hover:bg-brand-danger/10 transition-colors duration-100"
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                    {menus.length > 1 && (
+                      <button
+                        onClick={() => setConfirmDeleteId(m._id)}
+                        aria-label="Eliminar menú"
+                        className="flex items-center justify-center w-8 h-8 rounded-md border border-brand-danger/30 bg-white text-brand-danger hover:bg-brand-danger/10 transition-colors duration-100"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 animate-in fade-in duration-150 shrink-0">

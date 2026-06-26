@@ -3,6 +3,7 @@ import { Webhook } from 'svix'
 import type { WebhookEvent } from '@clerk/nextjs/server'
 import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
+import { Menu } from '@/models/Menu'
 import { generateSlug } from '@/lib/utils'
 
 export async function POST(req: Request) {
@@ -54,11 +55,20 @@ export async function POST(req: Request) {
     await dbConnect()
 
     // $setOnInsert ensures idempotency — duplicate webhook deliveries don't overwrite confirmed slugs
-    await Restaurant.findOneAndUpdate(
+    const restaurant = await Restaurant.findOneAndUpdate(
       { clerkId },
       { $setOnInsert: { clerkId, name, slug, slugConfirmed: false } },
       { upsert: true, new: true }
     )
+
+    // Auto-create the default "Estándar" menu for every new restaurant
+    if (restaurant) {
+      await Menu.findOneAndUpdate(
+        { restaurantId: restaurant._id, name: 'Estándar' },
+        { $setOnInsert: { restaurantId: restaurant._id, name: 'Estándar', startTime: null, endTime: null, isActive: false, order: 0 } },
+        { upsert: true }
+      )
+    }
   }
 
   return new Response('OK', { status: 200 })

@@ -140,6 +140,9 @@ export async function deleteMenu(prevState: any, formData: FormData) {
   const menu = await Menu.findOne({ _id: menuId, restaurantId: restaurant._id })
   if (!menu) return { success: false, error: 'Menú no encontrado.' }
 
+  const menuCount = await Menu.countDocuments({ restaurantId: restaurant._id })
+  if (menuCount <= 1) return { success: false, error: 'No podés eliminar el único menú. El menú Estándar siempre debe existir.' }
+
   // Remove this menu from all dishes
   await Dish.updateMany(
     { restaurantId: restaurant._id },

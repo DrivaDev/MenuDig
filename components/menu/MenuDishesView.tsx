@@ -65,16 +65,16 @@ export default function MenuDishesView({
     return () => clearInterval(id)
   }, [menus])
 
-  const hasMenus = menus.length > 0
+  // Filtering is active only when activeMenuId is non-null (multi-menu mode or timed mode)
+  const isFilteringActive = activeMenuId !== null
 
-  // Filter dishes by active menu (if menus exist)
   const filteredDishesByCategory: Record<string, DishData[]> = {}
   for (const [catId, dishes] of Object.entries(dishesByCategory)) {
-    if (!hasMenus || !activeMenuId) {
+    if (!isFilteringActive) {
       filteredDishesByCategory[catId] = dishes
     } else {
       filteredDishesByCategory[catId] = dishes.filter(d =>
-        d.menuIds && d.menuIds.includes(activeMenuId)
+        d.menuIds && d.menuIds.includes(activeMenuId!)
       )
     }
   }
