@@ -287,7 +287,7 @@ export default async function MenuPage({
             />
           )}
 
-          <h1 className="text-2xl font-bold text-brand-titulares leading-tight">
+          <h1 className="text-2xl font-bold text-brand-titulares leading-tight mt-2">
             {serializedRestaurant.name}
           </h1>
           {showDescription && serializedRestaurant.description && (
@@ -332,7 +332,7 @@ export default async function MenuPage({
 
           {/* WiFi — icon inherits text color */}
           {serializedRestaurant.wifiName && serializedRestaurant.wifiPassword && (
-            <div className={`flex items-center gap-3 mt-1 py-2 px-3 rounded-lg bg-brand-acento/20 w-fit ${logoPosition === 'center' ? 'self-center' : ''}`}>
+            <div className={`flex items-center gap-3 mt-1 ${logoPosition === 'center' ? 'self-center' : ''}`}>
               <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 text-brand-texto" fill="none" stroke="currentColor" strokeWidth={2} xmlns="http://www.w3.org/2000/svg">
                 <path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
