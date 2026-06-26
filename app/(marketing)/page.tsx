@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { UtensilsCrossed, QrCode, Zap, Palette, Check, X, ChevronDown, ArrowRight, Star, Clock, Smartphone } from 'lucide-react'
+import { QrCode, Zap, Palette, Check, X, ChevronDown, ArrowRight, Star, Clock, Smartphone } from 'lucide-react'
+import { AnimatedPhoneMockup } from '@/components/landing/AnimatedPhoneMockup'
 
 export const metadata: Metadata = {
   title: 'Menú Digital con QR para Restaurantes — Gratis | MenuDig',
@@ -97,112 +98,6 @@ function CompareIcon({ val }: { val: boolean }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Phone mockup (pure HTML/CSS — no images)
-// ─────────────────────────────────────────────────────────────────────────────
-
-const MOCK_DISHES = [
-  { name: 'Empanadas de carne (x6)', desc: 'Relleno criollo, horno de barro', price: '$4.800', bg: '#FDE68A' },
-  { name: 'Provoleta a la parrilla',  desc: 'Con chimichurri casero',          price: '$6.200', bg: '#FCA5A5' },
-  { name: 'Tabla de fiambres',        desc: 'Jamón, salame y quesos selectos', price: '$8.500', bg: '#C4B5A5' },
-]
-
-function PhoneMockup() {
-  return (
-    <div className="relative mx-auto w-[260px] sm:w-[280px] shrink-0 select-none">
-
-      {/* Floating badge — top right */}
-      <div className="absolute -right-10 top-14 z-20 bg-white rounded-2xl border border-brand-acento shadow-lg px-3 py-2 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-green-400 shrink-0" />
-        <span className="text-[11px] font-semibold text-brand-titulares whitespace-nowrap">Menú actualizado</span>
-      </div>
-
-      {/* Floating badge — bottom left */}
-      <div className="absolute -left-10 bottom-32 z-20 bg-white rounded-2xl border border-brand-acento shadow-lg px-3 py-2 flex items-center gap-2">
-        <QrCode size={13} className="text-brand-principal shrink-0" />
-        <span className="text-[11px] font-semibold text-brand-titulares whitespace-nowrap">Sin descargas</span>
-      </div>
-
-      {/* Side buttons */}
-      <div className="absolute left-[-4px] top-[88px]  w-[4px] h-7 bg-gray-700 rounded-l-sm" />
-      <div className="absolute left-[-4px] top-[124px] w-[4px] h-7 bg-gray-700 rounded-l-sm" />
-      <div className="absolute right-[-4px] top-[108px] w-[4px] h-11 bg-gray-700 rounded-r-sm" />
-
-      {/* Phone shell */}
-      <div className="bg-gray-900 rounded-[3rem] p-[11px] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.55)] ring-1 ring-white/5">
-
-        {/* Screen */}
-        <div className="bg-[#FFF7ED] rounded-[2.4rem] overflow-hidden" style={{ height: '572px' }}>
-
-          {/* Status bar */}
-          <div className="grid grid-cols-3 items-center px-5 pt-3 pb-1">
-            <span className="text-[11px] font-bold text-brand-texto">9:41</span>
-            <div className="w-[76px] h-[22px] bg-gray-900 rounded-full mx-auto" />
-            <div className="flex justify-end items-center gap-[5px]">
-              {/* Signal bars */}
-              <div className="flex items-end gap-[2px] h-[10px]">
-                {[4, 6, 8, 10].map((h, i) => (
-                  <div key={i} className="w-[3px] rounded-sm bg-brand-texto" style={{ height: `${h}px` }} />
-                ))}
-              </div>
-              {/* Battery */}
-              <div className="flex items-center gap-[2px]">
-                <div className="w-[18px] h-[10px] rounded-[3px] border border-brand-texto/70 relative">
-                  <div className="absolute inset-[2px] bg-brand-texto rounded-[1px]" style={{ right: '4px' }} />
-                </div>
-                <div className="w-[2px] h-[5px] bg-brand-texto/60 rounded-r-sm" />
-              </div>
-            </div>
-          </div>
-
-          {/* Restaurant header */}
-          <div className="px-4 pt-2 pb-3 flex items-center gap-3 border-b border-brand-acento/30">
-            <div className="w-10 h-10 rounded-full bg-brand-acento border-2 border-brand-principal flex items-center justify-center shrink-0">
-              <UtensilsCrossed size={15} className="text-brand-titulares" />
-            </div>
-            <div>
-              <p className="text-[12px] font-bold text-brand-titulares leading-tight">La Parrilla del Centro</p>
-              <p className="text-[10px] text-brand-texto/60 mt-0.5">menudig.com.ar/parrilla</p>
-            </div>
-          </div>
-
-          {/* Category nav */}
-          <div className="flex gap-2 px-4 py-2.5 border-b border-gray-200/70">
-            <span className="bg-brand-principal text-white text-[10px] font-bold px-3 py-1 rounded-full">Entradas</span>
-            <span className="text-brand-texto/50 text-[10px] px-3 py-1 rounded-full border border-gray-200">Parrilla</span>
-            <span className="text-brand-texto/50 text-[10px] px-3 py-1 rounded-full border border-gray-200">Postres</span>
-          </div>
-
-          {/* Section title */}
-          <div className="px-4 pt-3 pb-1">
-            <p className="text-[10px] font-bold text-brand-titulares/60 uppercase tracking-widest">Entradas</p>
-          </div>
-
-          {/* Dish rows */}
-          {MOCK_DISHES.map((d, i) => (
-            <div key={d.name} className={`flex items-center gap-3 px-4 py-3 ${i < MOCK_DISHES.length - 1 ? 'border-b border-gray-100' : ''}`}>
-              <div
-                className="w-12 h-12 rounded-xl shrink-0"
-                style={{ backgroundColor: d.bg }}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-brand-titulares leading-tight truncate">{d.name}</p>
-                <p className="text-[10px] text-brand-texto/60 mt-0.5 truncate">{d.desc}</p>
-                <p className="text-[12px] font-bold text-brand-titulares mt-1">{d.price}</p>
-              </div>
-            </div>
-          ))}
-
-          {/* Bottom safe area */}
-          <div className="mt-auto px-4 pb-3 pt-4 border-t border-gray-100 flex justify-center">
-            <div className="w-28 h-1 bg-gray-300 rounded-full" />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -270,7 +165,7 @@ export default function LandingPage() {
 
             {/* Right: phone mockup */}
             <div className="w-full lg:w-auto flex justify-center lg:justify-end shrink-0">
-              <PhoneMockup />
+              <AnimatedPhoneMockup />
             </div>
           </div>
         </section>
