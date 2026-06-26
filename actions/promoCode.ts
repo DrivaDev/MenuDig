@@ -5,6 +5,16 @@ import { dbConnect } from '@/lib/dbConnect'
 import { Restaurant } from '@/models/Restaurant'
 import { PromoCode } from '@/models/PromoCode'
 
+export async function clearPendingPromo(): Promise<void> {
+  const { userId } = await auth()
+  if (!userId) return
+  await dbConnect()
+  await Restaurant.updateOne(
+    { clerkId: userId },
+    { $set: { pendingPromo: { codeId: null, code: '', discount_type: null, value: null } } },
+  )
+}
+
 export type RedeemState = {
   success: boolean
   error?: string

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useActionState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Tag, X } from 'lucide-react'
-import { redeemPromoCode, type RedeemState } from '@/actions/promoCode'
+import { redeemPromoCode, clearPendingPromo, type RedeemState } from '@/actions/promoCode'
 
 const BASE_PRICE = 20000
 const initialState: RedeemState = { success: false }
@@ -18,19 +18,71 @@ function formatARS(n: number) {
   return `$${n.toLocaleString('es-AR')}`
 }
 
+// Isolated so changing `resetKey` remounts it and resets useActionState
+function PromoSection({
+  onApplied,
+}: {
+  onApplied: (state: RedeemState) => void
+}) {
+  const [state, formAction, pending] = useActionState(
+    async (prev: RedeemState, fd: FormData) => {
+      const next = await redeemPromoCode(prev, fd)
+      if (next.success) onApplied(next)
+      return next
+    },
+    initialState,
+  )
+
+  return (
+    <form action={formAction} className="flex items-start gap-2">
+      <div className="flex-1 flex flex-col gap-1">
+        <input
+          name="code"
+          type="text"
+          placeholder="CÓDIGO"
+          disabled={pending || state.success}
+          className="border border-gray-200 rounded-md px-3 py-2 text-sm font-mono uppercase placeholder:normal-case focus:outline-none focus:border-brand-principal focus:ring-1 focus:ring-brand-principal disabled:bg-gray-50 w-full"
+        />
+        {state.error && <p className="text-xs text-red-600">{state.error}</p>}
+        {state.success && state.message && (
+          <p className="text-xs text-green-700 font-medium">{state.message}</p>
+        )}
+      </div>
+      <button
+        type="submit"
+        disabled={pending || state.success}
+        className="shrink-0 flex items-center gap-1.5 bg-brand-principal text-white text-sm font-medium rounded-lg px-3 py-2 hover:bg-[#C2410C] disabled:opacity-50 transition-colors"
+      >
+        {pending && <Loader2 size={12} className="animate-spin" />}
+        Aplicar
+      </button>
+    </form>
+  )
+}
+
 export function SubscribeModal() {
   const [open, setOpen] = useState(false)
-  const [state, formAction, pending] = useActionState(redeemPromoCode, initialState)
+  const [applied, setApplied] = useState<RedeemState | null>(null)
+  const [resetKey, setResetKey] = useState(0)
+  const [clearing, startClearing] = useTransition()
   const router = useRouter()
 
   function handleClose() {
     setOpen(false)
-    if (state.is_free) router.refresh()
+    if (applied?.is_free) router.refresh()
   }
 
-  const showConfirm = state.success && state.is_free
-  const discountedPrice = calcPrice(state.discount_type, state.value)
-  const hasDiscount = state.success && !state.is_free
+  function handleChange() {
+    startClearing(async () => {
+      await clearPendingPromo()
+      setApplied(null)
+      setResetKey(k => k + 1)
+    })
+  }
+
+  const hasDiscount = applied?.success && !applied.is_free
+  const showConfirm = applied?.success && applied.is_free
+  const discountedPrice = calcPrice(applied?.discount_type, applied?.value)
 
   return (
     <>
@@ -44,10 +96,7 @@ export function SubscribeModal() {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={handleClose}
-          />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
           <div className="relative bg-white rounded-2xl shadow-xl p-6 mx-4 max-w-sm w-full">
             <button
               type="button"
@@ -58,14 +107,14 @@ export function SubscribeModal() {
               <X size={18} />
             </button>
 
-            <h2 className="text-lg font-semibold text-brand-titulares mb-1">
-              Plan Mensual
-            </h2>
+            {/* Price header */}
+            <h2 className="text-lg font-semibold text-brand-titulares mb-1">Plan Mensual</h2>
             <div className="flex items-baseline gap-2 mb-5">
               {hasDiscount ? (
                 <>
                   <span className="text-2xl font-bold text-brand-principal">
-                    {formatARS(discountedPrice)}<span className="text-sm font-normal text-brand-texto">/mes</span>
+                    {formatARS(discountedPrice)}
+                    <span className="text-sm font-normal text-brand-texto">/mes</span>
                   </span>
                   <span className="text-base line-through text-gray-400">
                     {formatARS(BASE_PRICE)}
@@ -80,38 +129,26 @@ export function SubscribeModal() {
 
             {/* Promo code */}
             <div className="mb-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Tag size={14} className="text-brand-titulares" />
-                <span className="text-sm font-medium text-brand-titulares">
-                  Código de descuento
-                </span>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Tag size={14} className="text-brand-titulares" />
+                  <span className="text-sm font-medium text-brand-titulares">
+                    Código de descuento
+                  </span>
+                </div>
+                {applied?.success && (
+                  <button
+                    type="button"
+                    onClick={handleChange}
+                    disabled={clearing}
+                    className="text-xs text-brand-principal underline underline-offset-2 hover:text-brand-titulares disabled:opacity-50 transition-colors"
+                  >
+                    {clearing ? 'Limpiando…' : 'Cambiar código'}
+                  </button>
+                )}
               </div>
 
-              <form action={formAction} className="flex items-start gap-2">
-                <div className="flex-1 flex flex-col gap-1">
-                  <input
-                    name="code"
-                    type="text"
-                    placeholder="CÓDIGO"
-                    disabled={pending || state.success}
-                    className="border border-gray-200 rounded-md px-3 py-2 text-sm font-mono uppercase placeholder:normal-case focus:outline-none focus:border-brand-principal focus:ring-1 focus:ring-brand-principal disabled:bg-gray-50 w-full"
-                  />
-                  {state.error && (
-                    <p className="text-xs text-red-600">{state.error}</p>
-                  )}
-                  {state.success && state.message && (
-                    <p className="text-xs text-green-700 font-medium">{state.message}</p>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  disabled={pending || state.success}
-                  className="shrink-0 flex items-center gap-1.5 bg-brand-principal text-white text-sm font-medium rounded-lg px-3 py-2 hover:bg-[#C2410C] disabled:opacity-50 transition-colors"
-                >
-                  {pending && <Loader2 size={12} className="animate-spin" />}
-                  Aplicar
-                </button>
-              </form>
+              <PromoSection key={resetKey} onApplied={setApplied} />
             </div>
 
             {/* Actions */}
