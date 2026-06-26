@@ -25,7 +25,7 @@ export function DishRow({ dish }: Props) {
     : null
 
   return (
-    <article className="flex items-start gap-4 px-4 py-4 border-b border-gray-100 last:border-b-0">
+    <article className="flex items-start gap-4 px-4 py-4">
       {/* Left: image slot — fixed 80×80px */}
       <div className="relative w-20 h-20 shrink-0 rounded-md overflow-hidden bg-gray-100 md:w-24 md:h-24">
         {dish.imageUrl ? (
